@@ -40,16 +40,11 @@ const FichaActivo = () => {
           className="w-full h-64 object-contain rounded mb-4"
         />
         <div className="text-gray-700 space-y-2">
-        <img
-                src={activo.image_url}
-                alt="Foto del activo"
-                className="w-full h-auto rounded shadow-md"
-              />
-          <p><strong>Nombre:</strong> {activo.nombre}</p>
-          <p><strong>Descripción:</strong> {activo.descripcion}</p>
-          <p><strong>Ubicación:</strong> {activo.ubicacion}</p>
-          <p><strong>Categoría:</strong> {activo.categoria}</p>
-          <p><strong>Estado:</strong> {activo.estado}</p>
+          <p><strong>Nombre:</strong> {activo.name}</p>
+          <p><strong>Descripción:</strong> {activo.details}</p>
+          <p><strong>Ubicación:</strong> {activo.location}</p>
+          <p><strong>Categoría:</strong> {activo.category}</p>
+          <p><strong>Estado:</strong> {activo.status}</p>
           <p><strong>Código:</strong> {activo.codigo}</p>
           <p><strong>Propiedad:</strong> CGER, La Palma</p>
         </div>
