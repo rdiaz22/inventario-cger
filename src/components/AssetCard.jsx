@@ -42,9 +42,9 @@ const AssetCard = ({ asset, onClick }) => {
         <head>
           <title>Etiqueta</title>
           <style>
-            body { font-family: sans-serif; text-align: center; padding: 20px; }
-            .etiqueta { border: 1px solid #ccc; padding: 10px; display: inline-block; }
-            .qr { margin-bottom: 10px; }
+            body { font-family: sans-serif; text-align: center; padding:10px; }
+            .etiqueta { border: 1px solid #ccc; padding: 6px; display: inline-block; }
+            .qr { margin-bottom: 4px; }
           </style>
         </head>
         <body onload="window.print();window.close()">
@@ -98,7 +98,7 @@ const AssetCard = ({ asset, onClick }) => {
             <div className="qr">
               <QRCode
                 value={`https://inventario-cger.vercel.app/activos/${asset.id}`}
-                size={120}
+                size={80}
               />
             </div>
             <div><strong>{asset.codigo}</strong></div>
