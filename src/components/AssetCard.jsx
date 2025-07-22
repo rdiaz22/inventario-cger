@@ -1,33 +1,16 @@
-import React from "react";
+import React, { useRef } from "react";
 import QRCode from "react-qr-code";
-
 import {
-  Laptop,
-  Monitor,
-  Printer,
-  Phone,
-  PcCase,
-  Mic,
-  Camera,
-  Speaker,
-  Keyboard,
-  Mouse,
-  Battery,
-  CardSim,
-  PlugZap,
-  Projector,
-  HardDrive,
-  Router,
-  Box,
-  HelpCircle,
-  Archive
+  Laptop, Monitor, Printer, Phone, PcCase, Mic, Camera,
+  Speaker, Keyboard, Mouse, Battery, CardSim, PlugZap,
+  Projector, HardDrive, Router, Box, HelpCircle, Archive
 } from "lucide-react";
 
 const getIcon = (category) => {
   const normalized = (category || "").toLowerCase();
 
   if (normalized.includes("portátil")) return <Laptop className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("sobremesa")) return <PcCase  className="w-6 h-6 text-gray-600" />;
+  if (normalized.includes("sobremesa")) return <PcCase className="w-6 h-6 text-gray-600" />;
   if (normalized.includes("monitor")) return <Monitor className="w-6 h-6 text-gray-600" />;
   if (normalized.includes("impresora")) return <Printer className="w-6 h-6 text-gray-600" />;
   if (normalized.includes("micrófono")) return <Mic className="w-6 h-6 text-gray-600" />;
@@ -49,59 +32,78 @@ const getIcon = (category) => {
 };
 
 const AssetCard = ({ asset, onClick }) => {
-  const [printMode, setPrintMode] = useState(false);
+  const etiquetaRef = useRef();
 
   const handlePrint = () => {
-    setPrintMode(true);
-    setTimeout(() => {
-      window.print();
-      setPrintMode(false);
-    }, 100);
+    const printWindow = window.open('', '_blank');
+    const html = etiquetaRef.current.innerHTML;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Etiqueta</title>
+          <style>
+            body { font-family: sans-serif; text-align: center; padding: 20px; }
+            .etiqueta { border: 1px solid #ccc; padding: 10px; display: inline-block; }
+            .qr { margin-bottom: 10px; }
+          </style>
+        </head>
+        <body onload="window.print();window.close()">
+          ${html}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
-  if (printMode) {
-    return (
-      <div className="p-4 bg-white w-56 h-32 flex flex-col items-center justify-center text-center text-xs print:block">
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white p-4 border rounded shadow hover:bg-gray-100 cursor-pointer space-y-2"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">{asset.name}</h3>
+        {getIcon(asset.category)}
+      </div>
+      <p className="text-sm text-gray-600">
+        {asset.brand} – {asset.model}
+      </p>
+      <p className="text-sm text-gray-500">Serie: {asset.serial_number}</p>
+      <p className="text-sm text-blue-600">{asset.category}</p>
+
+      {/* Código QR visual de referencia */}
+      <div className="bg-white p-2 mt-2 flex justify-center">
         <QRCode
           value={`https://inventario-cger.vercel.app/activos/${asset.id}`}
-          size={64}
+          size={100}
         />
-        <div className="mt-1 font-mono text-sm tracking-widest">{asset.code}</div>
-        <div className="text-[10px] mt-1 text-gray-700">Propiedad de</div>
-        <div className="font-semibold text-[11px]">CGER, La Palma</div>
       </div>
-    );
-  }
-  return (
-    <div className="relative">
-      <div className="rounded-xl border p-4 shadow relative bg-white">
-        {/* Botón imprimir etiqueta */}
+
+      {/* Botón para imprimir etiqueta */}
+      <div className="flex justify-center">
         <button
-          onClick={handlePrint}
-          className="absolute top-2 right-2 text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300 print:hidden"
-          title="Imprimir etiqueta"
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePrint();
+          }}
+          className="text-sm mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          🖨️
+          Imprimir etiqueta
         </button>
       </div>
-      <div
-        onClick={onClick}
-        className="bg-white p-4 border rounded shadow hover:bg-gray-100 cursor-pointer space-y-2"
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">{asset.name}</h3>
-          {getIcon(asset.category)}
-        </div>
-        <p className="text-sm text-gray-600">
-          {asset.brand} – {asset.model}
-        </p>
-        <p className="text-sm text-gray-500">Serie: {asset.serial_number}</p>
-        <p className="text-sm text-blue-600">{asset.category}</p>
-        <div className="bg-white p-2 mt-2 flex justify-center">
-          <QRCode
-            value={`https://inventario-cger.vercel.app/activos/${asset.id}`}
-            size={100}
-          />
+
+      {/* Contenido que se imprime */}
+      <div style={{ display: "none" }}>
+        <div ref={etiquetaRef}>
+          <div className="etiqueta">
+            <div className="qr">
+              <QRCode
+                value={`https://inventario-cger.vercel.app/activos/${asset.id}`}
+                size={120}
+              />
+            </div>
+            <div><strong>{asset.id}</strong></div>
+            <div>Propiedad de CGER, La Palma</div>
+          </div>
         </div>
       </div>
     </div>
