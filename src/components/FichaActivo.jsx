@@ -11,7 +11,7 @@ const FichaActivo = () => {
   useEffect(() => {
     const fetchActivo = async () => {
       const { data, error } = await supabase
-        .from("activos")
+        .from("assets")
         .select("*")
         .eq("id", id)
         .single();

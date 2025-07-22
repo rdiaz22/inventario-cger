@@ -65,7 +65,7 @@ const AssetCard = ({ asset, onClick }) => {
       <p className="text-sm text-blue-600">{asset.category}</p>
       <div className="bg-white p-2 mt-2 flex justify-center">
         <QRCode
-          value={`Activo: ${asset.name}\nSerie: ${asset.serial_number}`}
+          value={`https://inventario-cger.vercel.app/activos/${asset.id}`}
           size={100}
         />
       </div>
