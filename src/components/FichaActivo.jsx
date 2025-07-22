@@ -39,12 +39,15 @@ const FichaActivo = () => {
           alt="Imagen del activo"
           className="w-full h-64 object-contain rounded mb-4"
         />
-        <div className="text-gray-700 space-y-2">
+        <div className="text-gray-500 space-y-2 text-lg">
           <p><strong>Nombre:</strong> {activo.name}</p>
+          <p><strong>Marca:</strong> {activo.brand}</p>
+          <p><strong>Modelo:</strong> {activo.model}</p>
           <p><strong>Descripción:</strong> {activo.details}</p>
           <p><strong>Ubicación:</strong> {activo.location}</p>
           <p><strong>Categoría:</strong> {activo.category}</p>
           <p><strong>Estado:</strong> {activo.status}</p>
+          <p><strong>Asignado a:</strong> {activo.assigned_to}</p>
           <p><strong>Código:</strong> {activo.codigo}</p>
           <p><strong>Propiedad:</strong> CGER, La Palma</p>
         </div>
