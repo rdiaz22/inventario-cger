@@ -101,7 +101,7 @@ const AssetCard = ({ asset, onClick }) => {
                 size={120}
               />
             </div>
-            <div><strong>{asset.id}</strong></div>
+            <div><strong>{asset.codigo}</strong></div>
             <div>Propiedad de CGER, La Palma</div>
           </div>
         </div>
