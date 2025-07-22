@@ -37,7 +37,7 @@ const FichaActivo = () => {
         <img
           src={activo.image_url}
           alt="Imagen del activo"
-          className="w-full h-64 object-contain rounded mb-4"
+          className="w-full h-1/2 object-contain rounded mb-4"
         />
         <div className="text-gray-500 space-y-2 text-lg">
           <p><strong>Nombre:</strong> {activo.name}</p>
