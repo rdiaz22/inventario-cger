@@ -35,11 +35,16 @@ const FichaActivo = () => {
       <h1 className="text-2xl font-bold mb-4">Ficha del Activo</h1>
       <div className="bg-gray-100 rounded-xl shadow-md w-full max-w-xl p-4">
         <img
-          src={activo.imagen_url}
+          src={activo.image_url}
           alt="Imagen del activo"
           className="w-full h-64 object-contain rounded mb-4"
         />
         <div className="text-gray-700 space-y-2">
+        <img
+                src={activo.image_url}
+                alt="Foto del activo"
+                className="w-full h-auto rounded shadow-md"
+              />
           <p><strong>Nombre:</strong> {activo.nombre}</p>
           <p><strong>Descripción:</strong> {activo.descripcion}</p>
           <p><strong>Ubicación:</strong> {activo.ubicacion}</p>
