@@ -44,7 +44,7 @@ function App() {
             </div>
           }
         />
-        <Route path="/activo/:id" element={<FichaActivo />} />
+        <Route path="/activos/:id" element={<FichaActivo />} />
       </Routes>
     </Router>
   );
