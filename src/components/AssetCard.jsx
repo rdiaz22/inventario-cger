@@ -1,111 +1,90 @@
-import React, { useRef } from "react";
+import React, { useState } from "react";
+import { FaEye, FaPrint } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import QRCode from "react-qr-code";
-import {
-  Laptop, Monitor, Printer, Phone, PcCase, Mic, Camera,
-  Speaker, Keyboard, Mouse, Battery, CardSim, PlugZap,
-  Projector, HardDrive, Router, Box, HelpCircle, Archive
-} from "lucide-react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
-const getIcon = (category) => {
-  const normalized = (category || "").toLowerCase();
+const AssetCard = ({ asset }) => {
+  const navigate = useNavigate();
+  const [showQR, setShowQR] = useState(false);
 
-  if (normalized.includes("portátil")) return <Laptop className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("sobremesa")) return <PcCase className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("monitor")) return <Monitor className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("impresora")) return <Printer className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("micrófono")) return <Mic className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("cámara")) return <Camera className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("altavoz")) return <Speaker className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("teclado")) return <Keyboard className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("ratón")) return <Mouse className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("batería")) return <Battery className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("cargador")) return <PlugZap className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("tarjeta sim")) return <CardSim className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("disco")) return <HardDrive className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("escáner")) return <Archive className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("proyector")) return <Projector className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("router") || normalized.includes("switch")) return <Router className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("móvil")) return <Phone className="w-6 h-6 text-gray-600" />;
-  if (normalized.includes("accesorios")) return <Box className="w-6 h-6 text-gray-600" />;
+  const handleCardClick = () => {
+    navigate(`/activos/${asset.id}`);
+  };
 
-  return <HelpCircle className="w-6 h-6 text-gray-600" />;
-};
+  const handlePrint = async (e) => {
+    e.stopPropagation();
+    const element = document.getElementById(`label-${asset.id}`);
+    if (!element) return;
 
-const AssetCard = ({ asset, onClick }) => {
-  const etiquetaRef = useRef();
+    const canvas = await html2canvas(element);
+    const imgData = canvas.toDataURL("image/png");
 
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    const html = etiquetaRef.current.innerHTML;
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Etiqueta</title>
-          <style>
-            body { font-family: sans-serif; text-align: center; padding:10px; }
-            .etiqueta { border: 1px solid #ccc; padding: 6px; display: inline-block; }
-            .qr { margin-bottom: 4px; }
-          </style>
-        </head>
-        <body onload="window.print();window.close()">
-          ${html}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: [60, 40], // tamaño de etiqueta pequeño
+    });
+
+    pdf.addImage(imgData, "PNG", 0, 0, 60, 40);
+    pdf.save(`etiqueta-${asset.codigo}.pdf`);
   };
 
   return (
     <div
-      onClick={onClick}
-      className="bg-white p-4 border rounded shadow hover:bg-gray-100 cursor-pointer space-y-2"
+      onClick={handleCardClick}
+      className="cursor-pointer rounded-xl border shadow-sm hover:shadow-md transition-shadow p-4 bg-white flex flex-col sm:flex-row items-center sm:items-start gap-4 w-full"
     >
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{asset.name}</h3>
-        {getIcon(asset.category)}
-      </div>
-      <p className="text-sm text-gray-600">
-        {asset.brand} – {asset.model}
-      </p>
-      <p className="text-sm text-gray-500">Serie: {asset.serial_number}</p>
-      <p className="text-sm text-blue-600">{asset.category}</p>
+      {/* Imagen */}
+      <img
+        src={asset.image_url}
+        alt={asset.nombre}
+        className="w-full sm:w-32 h-32 object-cover rounded-md"
+      />
 
-      {/* Código QR visual de referencia */}
-      <div className="bg-white p-2 mt-2 flex justify-center">
-        <QRCode
-          value={`https://inventario-cger.vercel.app/activos/${asset.id}`}
-          size={100}
-        />
+      {/* Info */}
+      <div className="flex flex-col flex-1 gap-1 text-center sm:text-left w-full">
+        <h2 className="text-lg font-semibold truncate">{asset.nombre}</h2>
+        <p className="text-sm text-gray-600 truncate">{asset.descripcion}</p>
+        <span className="text-xs bg-gray-200 px-2 py-1 rounded inline-block w-fit">
+          {asset.codigo}
+        </span>
       </div>
 
-      {/* Botón para imprimir etiqueta */}
-      <div className="flex justify-center">
+      {/* Acciones */}
+      <div className="flex flex-col items-center gap-2">
         <button
           onClick={(e) => {
             e.stopPropagation();
-            handlePrint();
+            setShowQR(!showQR);
           }}
-          className="text-sm mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="text-sm text-blue-500 hover:underline flex items-center gap-1"
         >
-          Imprimir etiqueta
+          <FaEye />
+          Ver QR
+        </button>
+        <button
+          onClick={handlePrint}
+          className="text-sm text-green-600 hover:underline flex items-center gap-1"
+        >
+          <FaPrint />
+          Imprimir
         </button>
       </div>
 
-      {/* Contenido que se imprime */}
-      <div style={{ display: "none" }}>
-        <div ref={etiquetaRef}>
-          <div className="etiqueta">
-            <div className="qr">
-              <QRCode
-                value={`https://inventario-cger.vercel.app/activos/${asset.id}`}
-                size={80}
-              />
-            </div>
-            <div><strong>{asset.codigo}</strong></div>
-            <div>Propiedad de CGER, La Palma</div>
-          </div>
+      {/* Etiqueta QR para impresión */}
+      {showQR && (
+        <div
+          id={`label-${asset.id}`}
+          className="p-2 mt-4 border rounded-md bg-white text-center shadow-md"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <QRCode value={`${window.location.origin}/activos/${asset.id}`} size={64} />
+          <p className="text-xs mt-1 font-mono">{asset.codigo}</p>
+          <p className="text-[10px] mt-1">Propiedad de CGER, La Palma</p>
         </div>
-      </div>
+      )}
     </div>
   );
 };
