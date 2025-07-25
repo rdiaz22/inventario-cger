@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "react-router-dom";
-import { Package, Layers, Settings, ClipboardList, Wrench, CalendarCheck, Box, User  } from "lucide-react";
+import { Package, Layers, Settings, ClipboardList, Wrench, CalendarCheck, Box, User, Home } from "lucide-react";
 
 const Sidebar = () => {
   const location = useLocation();
