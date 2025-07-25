@@ -33,7 +33,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
     serial_number: "",
     assigned_to: "",
     category: "",
-    fecha_compra:""
+    fecha_compra: "",
+    status: "Activo" // valor por defecto
   });
 
   const handleChange = (e) => {
@@ -92,6 +93,10 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
             {categorias.map((cat, i) => ( 
               <option key={i} value={cat}>{cat}</option>
             ))}
+          </select>
+          <select name="status" value={form.status} onChange={handleChange} className="border p-2 w-full">
+            <option value="Activo">Activo</option>
+            <option value="De baja">De baja</option>
           </select>
           <input
               type="file"
