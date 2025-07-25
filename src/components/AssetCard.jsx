@@ -4,6 +4,7 @@ import { FaEye, FaPrint } from "react-icons/fa";
 import QRCode from "react-qr-code";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { toDataURL } from 'qrcode'; // Agregar esta importación
 
 const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   // const navigate = useNavigate(); // Eliminar esta línea
@@ -13,19 +14,29 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
 
   const handlePrint = async (e) => {
     e.stopPropagation();
-    const element = document.getElementById(`label-${asset.id}`);
-    if (!element) return;
-
-    const canvas = await html2canvas(element);
-    const imgData = canvas.toDataURL("image/png");
+    // Generar QR en base64
+    const qrValue = `${window.location.origin}/activos/${asset.id}`;
+    const qrDataUrl = await toDataURL(qrValue, { width: 80, margin: 1 });
 
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: [60, 40], // tamaño de etiqueta pequeño
+      format: [60, 40],
     });
 
-    pdf.addImage(imgData, "PNG", 0, 0, 60, 40);
+    // Insertar QR
+    pdf.addImage(qrDataUrl, "PNG", 5, 5, 20, 20);
+
+    // Insertar código
+    pdf.setFontSize(14);
+    pdf.setFont(undefined, 'bold');
+    pdf.text(asset.codigo || '', 30, 15, { align: 'left' });
+
+    // Insertar texto propiedad
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'normal');
+    pdf.text("Propiedad de CGER, La Palma", 30, 22, { align: 'left' });
+
     pdf.save(`etiqueta-${asset.codigo}.pdf`);
   };
 
