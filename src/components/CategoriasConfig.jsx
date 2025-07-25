@@ -1,62 +1,73 @@
 // src/components/CategoriasConfig.jsx
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 
-export default function CategoriasConfig() {
+const CategoriasConfig = () => {
   const [categorias, setCategorias] = useState([]);
   const [nuevaCategoria, setNuevaCategoria] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const fetchCategorias = async () => {
-    const { data, error } = await supabase.from("categories").select("*").order("created_at");
-    if (!error) setCategorias(data);
-  };
-
-  const agregarCategoria = async () => {
-    if (!nuevaCategoria.trim()) return;
-    const { error } = await supabase.from("categories").insert({ name: nuevaCategoria.trim() });
-    if (!error) {
-      setNuevaCategoria("");
-      fetchCategorias();
-    }
-  };
-
-  const eliminarCategoria = async (id) => {
-    await supabase.from("categories").delete().eq("id", id);
-    fetchCategorias();
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("created_at", { ascending: true });
+    if (error) setError(error.message);
+    else setCategorias(data);
   };
 
   useEffect(() => {
     fetchCategorias();
   }, []);
 
+  const handleAddCategoria = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    if (!nuevaCategoria.trim()) {
+      setError("El nombre no puede estar vacío");
+      setLoading(false);
+      return;
+    }
+    const { error } = await supabase
+      .from("categories")
+      .insert([{ name: nuevaCategoria.trim() }]);
+    if (error) setError(error.message);
+    else {
+      setNuevaCategoria("");
+      fetchCategorias();
+    }
+    setLoading(false);
+  };
+
   return (
-    <div className="p-4 max-w-md mx-auto bg-white rounded shadow">
-      <h2 className="text-xl font-semibold mb-2">Categorías</h2>
-      <div className="flex gap-2 mb-4">
+    <div className="p-6 max-w-xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Categorías</h2>
+      <form onSubmit={handleAddCategoria} className="flex gap-2 mb-6">
         <input
           type="text"
-          className="border px-2 py-1 flex-1 rounded"
-          placeholder="Nueva categoría"
           value={nuevaCategoria}
-          onChange={(e) => setNuevaCategoria(e.target.value)}
+          onChange={e => setNuevaCategoria(e.target.value)}
+          placeholder="Nueva categoría"
+          className="border p-2 flex-1 rounded"
         />
-        <button onClick={agregarCategoria} className="bg-blue-600 text-white px-3 py-1 rounded">
-          Añadir
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          disabled={loading}
+        >
+          {loading ? "Agregando..." : "Agregar"}
         </button>
-      </div>
-      <ul className="space-y-2">
-        {categorias.map((cat) => (
-          <li key={cat.id} className="flex justify-between items-center border-b pb-1">
-            <span>{cat.name}</span>
-            <button
-              className="text-red-500 text-sm"
-              onClick={() => eliminarCategoria(cat.id)}
-            >
-              Eliminar
-            </button>
-          </li>
+      </form>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <ul className="divide-y border rounded bg-white">
+        {categorias.map(cat => (
+          <li key={cat.id} className="p-3">{cat.name}</li>
         ))}
       </ul>
     </div>
   );
-}
+};
+
+export default CategoriasConfig;
