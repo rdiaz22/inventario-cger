@@ -6,6 +6,7 @@ import AssetList from "./components/AssetList";
 import Login from "./components/Login";
 import Topbar from "./components/Topbar";
 import FichaActivo from "./components/FichaActivo";
+import CategoriasConfig from "./components/CategoriasConfig";
 
 function App() {
   const [session, setSession] = useState(null);
@@ -45,6 +46,7 @@ function App() {
           }
         />
         <Route path="/activos/:id" element={<FichaActivo />} />
+        <Route path="/categorias" element={<CategoriasConfig />} />
       </Routes>
     </Router>
   );
