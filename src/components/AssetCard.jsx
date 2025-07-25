@@ -75,12 +75,25 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       {showQR && (
         <div
           id={`label-${asset.id}`}
-          className="p-2 mt-4 border rounded-md bg-white text-center shadow-md"
+          style={{
+            width: 180,
+            height: 100,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "1px solid #ccc",
+            background: "#fff",
+            padding: 8,
+            boxSizing: "border-box"
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           <QRCode value={`${window.location.origin}/activos/${asset.id}`} size={64} />
-          <p className="text-xs mt-1 font-mono">{asset.codigo}</p>
-          <p className="text-[10px] mt-1">Propiedad de CGER, La Palma</p>
+          <p style={{ margin: "4px 0 0 0", fontSize: 14, fontWeight: "bold", letterSpacing: 1 }}>
+            {asset.codigo}
+          </p>
+          <p style={{ margin: 0, fontSize: 10 }}>Propiedad de CGER, La Palma</p>
         </div>
       )}
     </div>
