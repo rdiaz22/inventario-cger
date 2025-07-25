@@ -10,6 +10,7 @@ const categorias = [
 "Disco duro",
 "Dispositivo móvil",
 "Escáner",
+"Epi",
 "Impresora",
 "Monitor",
 "Micrófono",
