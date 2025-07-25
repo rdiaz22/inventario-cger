@@ -1,17 +1,15 @@
 import React, { useState } from "react";
 import { FaEye, FaPrint } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; // Eliminar esta línea
 import QRCode from "react-qr-code";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-const AssetCard = ({ asset }) => {
-  const navigate = useNavigate();
+const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
+  // const navigate = useNavigate(); // Eliminar esta línea
   const [showQR, setShowQR] = useState(false);
 
-  const handleCardClick = () => {
-    navigate(`/activos/${asset.id}`);
-  };
+  // Eliminar handleCardClick
 
   const handlePrint = async (e) => {
     e.stopPropagation();
@@ -33,7 +31,7 @@ const AssetCard = ({ asset }) => {
 
   return (
     <div
-      onClick={handleCardClick}
+      onClick={onClick} // Usar la prop onClick
       className="cursor-pointer rounded-xl border shadow-sm hover:shadow-md transition-shadow p-4 bg-white flex flex-col sm:flex-row items-center sm:items-start gap-4 w-full"
     >
       {/* Imagen */}
