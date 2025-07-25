@@ -14,28 +14,28 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
 
   const handlePrint = async (e) => {
     e.stopPropagation();
-    // Generar QR en base64
     const qrValue = `${window.location.origin}/activos/${asset.id}`;
-    const qrDataUrl = await toDataURL(qrValue, { width: 80, margin: 1 });
+    // Generar QR más grande para mejor definición
+    const qrDataUrl = await toDataURL(qrValue, { width: 200, margin: 1 });
 
     const pdf = new jsPDF({
-      orientation: "portrait",
+      orientation: "landscape", // horizontal
       unit: "mm",
       format: [60, 40],
     });
 
-    // Insertar QR
-    pdf.addImage(qrDataUrl, "PNG", 5, 5, 20, 20);
+    // Centrar el QR (20mm de ancho, centrado en 60mm)
+    pdf.addImage(qrDataUrl, "PNG", 20, 5, 20, 20);
 
-    // Insertar código
+    // Centrar el código (ancho total 60mm)
     pdf.setFontSize(14);
     pdf.setFont(undefined, 'bold');
-    pdf.text(asset.codigo || '', 30, 15, { align: 'left' });
+    pdf.text(asset.codigo || '', 30, 30, { align: 'center' });
 
-    // Insertar texto propiedad
+    // Centrar el texto de propiedad
     pdf.setFontSize(10);
     pdf.setFont(undefined, 'normal');
-    pdf.text("Propiedad de CGER, La Palma", 30, 22, { align: 'left' });
+    pdf.text("Propiedad de CGER, La Palma", 30, 35, { align: 'center' });
 
     pdf.save(`etiqueta-${asset.codigo}.pdf`);
   };
