@@ -83,7 +83,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
       imageUrl = publicUrlData.publicUrl;
     }
 
-    // Si es EPI, actualizar en epi_assets y epi_sizes
+    // Si es EPI, actualizar en epi_assets, epi_sizes Y assets
     if (isEPI) {
       // Actualizar EPI principal
       const { error: epiError } = await supabase
@@ -125,6 +125,16 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         if (sizesError) {
           console.error("Error al actualizar tallas:", sizesError);
         }
+      }
+
+      // También actualizar en assets para mantener consistencia
+      const { error: assetError } = await supabase
+        .from("assets")
+        .update({ ...formData, image_url: imageUrl })
+        .eq("id", asset.id);
+
+      if (assetError) {
+        console.error("Error al actualizar activo:", assetError.message);
       }
     } else {
       // Actualizar activo normal
