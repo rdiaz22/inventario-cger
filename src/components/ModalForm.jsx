@@ -75,6 +75,9 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
   const handleSubmit = async (e) => {
       e.preventDefault();
 
+      console.log("Datos del formulario:", form); // Debug
+      console.log("Tallas:", epiSizes); // Debug
+
       let imageUrl = "";
 
       if (imageFile) {
@@ -101,6 +104,9 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
       if (isEPI) {
         // Generar un código único si no existe
         const codigo = form.codigo || `EPI-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+        
+        console.log("Guardando EPI con código:", codigo); // Debug
+        
         const { data: epiData, error: epiError } = await supabase
           .from("epi_assets")
           .insert([{
@@ -116,6 +122,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           console.error("Error guardando EPI:", epiError);
           return;
         }
+
+        console.log("EPI guardado:", epiData); // Debug
 
         // Guardar tallas
         const sizesToInsert = epiSizes
@@ -152,7 +160,13 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           codigo
         };
         
-        await supabase.from("assets").insert([assetData]);
+        console.log("Guardando en assets:", assetData); // Debug
+        
+        const { error: assetError } = await supabase.from("assets").insert([assetData]);
+        
+        if (assetError) {
+          console.error("Error guardando en assets:", assetError);
+        }
       } else {
         // Guardar activo normal - solo campos que existen en assets
         const assetData = {
