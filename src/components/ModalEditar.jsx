@@ -24,11 +24,11 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           .eq("id", asset.id)
           .single();
 
-        // Buscar en assets por nombre para encontrar el registro correspondiente
+        // Buscar en assets por codigo para encontrar el registro correspondiente
         const { data: assetData, error: assetError } = await supabase
           .from("assets")
           .select("*")
-          .eq("name", asset.name)
+          .eq("codigo", asset.codigo)
           .eq("category", "EPI")
           .single();
 

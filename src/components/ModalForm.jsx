@@ -38,7 +38,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
     // Campos específicos para EPIs
     supplier: "",
     fabricante: "",
-    certificacion: ""
+    certificacion: "",
+    codigo: "" // Nuevo campo para el código
   });
 
   const [epiSizes, setEpiSizes] = useState([
@@ -98,13 +99,16 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
 
       // Si es EPI, guardar en tabla epi_assets, epi_sizes Y assets
       if (isEPI) {
+        // Generar un código único si no existe
+        const codigo = form.codigo || `EPI-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
         const { data: epiData, error: epiError } = await supabase
           .from("epi_assets")
           .insert([{
             name: form.name,
             model: form.model,
             supplier: form.supplier,
-            image_url: imageUrl
+            image_url: imageUrl,
+            codigo
           }])
           .select();
 
@@ -144,7 +148,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           category: form.category,
           fecha_compra: form.fecha_compra,
           status: form.status,
-          image_url: imageUrl
+          image_url: imageUrl,
+          codigo
         };
         
         await supabase.from("assets").insert([assetData]);
@@ -219,6 +224,13 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
                 value={form.certificacion}
                 onChange={handleChange} 
                 placeholder="Certificación" 
+                className="border p-2 w-full mb-3" 
+              />
+              <input 
+                name="codigo" 
+                value={form.codigo}
+                onChange={handleChange} 
+                placeholder="Código (opcional)" 
                 className="border p-2 w-full mb-3" 
               />
               
