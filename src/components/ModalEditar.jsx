@@ -2,10 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 
 const ModalEditar = ({ asset, onClose, onUpdated }) => {
-  const [formData, setFormData] = useState({
-    ...asset,
-    image_url: asset.image_url || "",
-  });
+  const [formData, setFormData] = useState({});
   const [epiSizes, setEpiSizes] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -13,11 +10,48 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
   // Verificar si es un EPI
   const isEPI = asset.category === "EPI";
 
-  // Cargar tallas si es un EPI
+  // Cargar datos completos del activo
   useEffect(() => {
-    if (isEPI && asset.tallas) {
-      setEpiSizes(asset.tallas.map(t => ({ size: t.size, units: t.units })));
-    }
+    const loadAssetData = async () => {
+      if (isEPI) {
+        // Para EPIs, cargar datos de ambas tablas
+        const { data: epiData, error: epiError } = await supabase
+          .from("epi_assets")
+          .select(`
+            *,
+            epi_sizes (*)
+          `)
+          .eq("id", asset.id)
+          .single();
+
+        const { data: assetData, error: assetError } = await supabase
+          .from("assets")
+          .select("*")
+          .eq("id", asset.id)
+          .single();
+
+        if (!epiError && !assetError) {
+          setFormData({
+            ...assetData, // Datos generales de assets
+            ...epiData,   // Datos específicos de epi_assets
+            image_url: epiData.image_url || assetData.image_url || ""
+          });
+          
+          // Cargar tallas
+          if (epiData.epi_sizes) {
+            setEpiSizes(epiData.epi_sizes.map(t => ({ size: t.size, units: t.units })));
+          }
+        }
+      } else {
+        // Para activos normales, usar los datos que ya tenemos
+        setFormData({
+          ...asset,
+          image_url: asset.image_url || ""
+        });
+      }
+    };
+
+    loadAssetData();
   }, [asset, isEPI]);
 
   const handleChange = (e) => {
