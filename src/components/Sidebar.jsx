@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 import { Package, Layers, Settings, ClipboardList, Wrench, CalendarCheck, Box, User, Home } from "lucide-react";
 
-const Sidebar = () => {
+const Sidebar = ({ onCategoriasClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -63,17 +63,13 @@ const Sidebar = () => {
               General
             </NavLink>
 
-            <NavLink
-              to="/configuracion/categorias"
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:text-primary ${
-                  isActive ? "bg-muted text-primary" : "text-muted-foreground"
-                }`
-              }
+            <button
+              onClick={onCategoriasClick}
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:text-primary text-muted-foreground hover:bg-muted"
             >
               <Layers className="h-4 w-4" />
               Categorías
-            </NavLink>
+            </button>
           </nav>
         </div>
       </div>

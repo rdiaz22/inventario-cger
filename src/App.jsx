@@ -10,6 +10,7 @@ import CategoriasConfig from "./components/CategoriasConfig";
 
 function App() {
   const [session, setSession] = useState(null);
+  const [isCategoriasModalOpen, setIsCategoriasModalOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -37,7 +38,7 @@ function App() {
           path="/activos"
           element={
             <div className="flex bg-gray-100 min-h-screen">
-              <Sidebar />
+              <Sidebar onCategoriasClick={() => setIsCategoriasModalOpen(true)} />
               <div className="flex-1 bg-gray-100 p-6 overflow-auto">
                 <Topbar />
                 <AssetList />
@@ -46,8 +47,12 @@ function App() {
           }
         />
         <Route path="/activos/:id" element={<FichaActivo />} />
-        <Route path="/configuracion/categorias" element={<CategoriasConfig />} />
       </Routes>
+      
+      <CategoriasConfig 
+        isOpen={isCategoriasModalOpen} 
+        onClose={() => setIsCategoriasModalOpen(false)} 
+      />
     </Router>
   );
 }
