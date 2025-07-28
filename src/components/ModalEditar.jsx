@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 
 const ModalEditar = ({ asset, onClose, onUpdated }) => {
@@ -6,12 +6,40 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
     ...asset,
     image_url: asset.image_url || "",
   });
+  const [epiSizes, setEpiSizes] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Verificar si es un EPI
+  const isEPI = asset.category === "EPI";
+
+  // Cargar tallas si es un EPI
+  useEffect(() => {
+    if (isEPI && asset.tallas) {
+      setEpiSizes(asset.tallas.map(t => ({ size: t.size, units: t.units })));
+    }
+  }, [asset, isEPI]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEpiSizeChange = (index, field, value) => {
+    const newSizes = [...epiSizes];
+    newSizes[index][field] = value;
+    setEpiSizes(newSizes);
+  };
+
+  const addEpiSize = () => {
+    setEpiSizes([...epiSizes, { size: "", units: 1 }]);
+  };
+
+  const removeEpiSize = (index) => {
+    if (epiSizes.length > 1) {
+      const newSizes = epiSizes.filter((_, i) => i !== index);
+      setEpiSizes(newSizes);
+    }
   };
 
   const handleFileChange = (e) => {
@@ -26,10 +54,8 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
 
     if (imageFile) {
       const fileExt = imageFile.name.split(".").pop();
-      const fileName = `${formData.id}-${Date.now()}.${fileExt}`; // más seguro
+      const fileName = `${formData.id}-${Date.now()}.${fileExt}`;
       const filePath = fileName;
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log("🔒 Sesión activa:", sessionData.session);
        
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("activos")
@@ -56,19 +82,63 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
     
       imageUrl = publicUrlData.publicUrl;
     }
-    
 
-    const { error } = await supabase
-      .from("assets")
-      .update({ ...formData, image_url: imageUrl })
-      .eq("id", asset.id);
+    // Si es EPI, actualizar en epi_assets y epi_sizes
+    if (isEPI) {
+      // Actualizar EPI principal
+      const { error: epiError } = await supabase
+        .from("epi_assets")
+        .update({
+          name: formData.name,
+          model: formData.model,
+          supplier: formData.supplier,
+          image_url: imageUrl
+        })
+        .eq("id", asset.id);
 
-    if (error) {
-      console.error("Error al guardar cambios:", error.message);
+      if (epiError) {
+        console.error("Error al actualizar EPI:", epiError);
+        setLoading(false);
+        return;
+      }
+
+      // Eliminar tallas existentes
+      await supabase
+        .from("epi_sizes")
+        .delete()
+        .eq("epi_id", asset.id);
+
+      // Insertar nuevas tallas
+      const sizesToInsert = epiSizes
+        .filter(size => size.size && size.units > 0)
+        .map(size => ({
+          epi_id: asset.id,
+          size: size.size,
+          units: size.units
+        }));
+
+      if (sizesToInsert.length > 0) {
+        const { error: sizesError } = await supabase
+          .from("epi_sizes")
+          .insert(sizesToInsert);
+
+        if (sizesError) {
+          console.error("Error al actualizar tallas:", sizesError);
+        }
+      }
     } else {
-      onUpdated();
+      // Actualizar activo normal
+      const { error } = await supabase
+        .from("assets")
+        .update({ ...formData, image_url: imageUrl })
+        .eq("id", asset.id);
+
+      if (error) {
+        console.error("Error al guardar cambios:", error.message);
+      }
     }
 
+    onUpdated();
     setLoading(false);
     onClose();
   };
@@ -135,6 +205,44 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           onChange={handleFileChange}
           className="mb-3"
         />
+
+        {isEPI && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold mb-2">Tallas del EPI</h3>
+            {epiSizes.map((size, index) => (
+              <div key={index} className="flex items-center mb-2">
+                <input
+                  type="text"
+                  placeholder="Talla"
+                  value={size.size}
+                  onChange={(e) => handleEpiSizeChange(index, "size", e.target.value)}
+                  className="w-24 border px-2 py-1 rounded mr-2"
+                />
+                <input
+                  type="number"
+                  placeholder="Unidades"
+                  value={size.units}
+                  onChange={(e) => handleEpiSizeChange(index, "units", parseInt(e.target.value) || 0)}
+                  className="w-16 border px-2 py-1 rounded"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeEpiSize(index)}
+                  className="ml-2 text-red-500 hover:text-red-700"
+                >
+                  X
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addEpiSize}
+              className="mt-2 px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+            >
+              Agregar talla
+            </button>
+          </div>
+        )}
 
         <div className="flex justify-end gap-2">
           <button

@@ -62,6 +62,32 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
                   : "No registrada"
               }
             />
+            
+            {/* Información específica de EPIs */}
+            {asset.category === "EPI" && (
+              <>
+                <DetailItem label="Proveedor" value={asset.supplier} />
+                <DetailItem label="Fabricante" value={asset.fabricante} />
+                <DetailItem label="Certificación" value={asset.certificacion} />
+                
+                {/* Mostrar tallas y unidades */}
+                {asset.tallas && asset.tallas.length > 0 && (
+                  <div className="border rounded p-3 bg-gray-50">
+                    <span className="text-xs font-medium text-gray-500 uppercase block mb-2">
+                      Tallas y Unidades
+                    </span>
+                    <div className="space-y-1">
+                      {asset.tallas.map((talla, index) => (
+                        <div key={index} className="flex justify-between text-sm">
+                          <span className="font-medium">Talla {talla.size}:</span>
+                          <span className="text-blue-600 font-bold">{talla.units} unidades</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           <div className="mt-6 text-right">

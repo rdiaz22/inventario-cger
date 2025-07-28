@@ -18,12 +18,38 @@ const AssetList = () => {
   }, []);
 
   const fetchAssets = async () => {
-    const { data, error } = await supabase
+    // Cargar activos normales
+    const { data: assetsData, error: assetsError } = await supabase
       .from("assets")
       .select("*")
       .order("name", { ascending: true });
-    if (error) console.error("Error al cargar activos:", error);
-    else setAssets(data);
+    
+    if (assetsError) console.error("Error al cargar activos:", assetsError);
+
+    // Cargar EPIs con sus tallas
+    const { data: epiData, error: epiError } = await supabase
+      .from("epi_assets")
+      .select(`
+        *,
+        epi_sizes (*)
+      `)
+      .order("name", { ascending: true });
+
+    if (epiError) console.error("Error al cargar EPIs:", epiError);
+
+    // Combinar y formatear datos
+    const normalAssets = assetsData || [];
+    const epiAssets = (epiData || []).map(epi => ({
+      ...epi,
+      id: epi.id,
+      category: "EPI",
+      // Crear un código único para EPIs si no existe
+      codigo: epi.codigo || `EPI-${epi.id.slice(0, 8).toUpperCase()}`,
+      // Agregar información de tallas
+      tallas: epi.epi_sizes || []
+    }));
+
+    setAssets([...normalAssets, ...epiAssets]);
   };
 
   const fetchCategories = async () => {
