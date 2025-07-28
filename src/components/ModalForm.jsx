@@ -132,8 +132,21 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           }
         }
       } else {
-        // Guardar activo normal
-        await supabase.from("assets").insert([{ ...form, image_url: imageUrl }]);
+        // Guardar activo normal - solo campos que existen en assets
+        const assetData = {
+          name: form.name,
+          brand: form.brand,
+          model: form.model,
+          details: form.details,
+          serial_number: form.serial_number,
+          assigned_to: form.assigned_to,
+          category: form.category,
+          fecha_compra: form.fecha_compra,
+          status: form.status,
+          image_url: imageUrl
+        };
+        
+        await supabase.from("assets").insert([assetData]);
       }
 
       onCreated();
