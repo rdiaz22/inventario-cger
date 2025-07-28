@@ -6,6 +6,7 @@ import AssetCard from "./AssetCard";
 
 const AssetList = () => {
   const [assets, setAssets] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,6 +14,7 @@ const AssetList = () => {
 
   useEffect(() => {
     fetchAssets();
+    fetchCategories();
   }, []);
 
   const fetchAssets = async () => {
@@ -24,9 +26,14 @@ const AssetList = () => {
     else setAssets(data);
   };
 
-  const uniqueCategories = [
-    ...new Set(assets.map((a) => a.category).filter(Boolean)),
-  ];
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("name", { ascending: true });
+    if (error) console.error("Error al cargar categorías:", error);
+    else setCategories(data);
+  };
 
   const filteredAssets = assets.filter((asset) => {
     const query = searchTerm.toLowerCase();
@@ -95,17 +102,17 @@ const AssetList = () => {
         >
           Todos
         </button>
-        {uniqueCategories.map((cat) => (
+        {categories.map((cat) => (
           <button
-            key={cat}
-            onClick={() => handleCategoryClick(cat)}
+            key={cat.id}
+            onClick={() => handleCategoryClick(cat.name)}
             className={`px-3 py-1 rounded-full border transition-all duration-150 ease-in-out hover:shadow-md hover:scale-105 text-sm font-medium ${
-              selectedCategory === cat
+              selectedCategory === cat.name
                 ? "bg-blue-600 text-white border-blue-700"
                 : "bg-gray-200 text-gray-700"
             }`}
           >
-            {cat}
+            {cat.name}
           </button>
         ))}
       </div>
