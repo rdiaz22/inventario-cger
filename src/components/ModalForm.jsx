@@ -69,7 +69,7 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
   const [imageFile, setImageFile] = useState(null);
 
   // Verificar si la categoría seleccionada es EPI
-  const isEPI = form.category === "EPI";
+  const isEPI = form.category.toLowerCase() === "epi";
 
   const handleSubmit = async (e) => {
       e.preventDefault();
