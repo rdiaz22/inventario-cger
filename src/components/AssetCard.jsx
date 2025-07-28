@@ -48,14 +48,14 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       {/* Imagen */}
       <img
         src={asset.image_url}
-        alt={asset.nombre}
+        alt={asset.name}
         className="w-full sm:w-32 h-32 object-cover rounded-md"
       />
 
       {/* Info */}
       <div className="flex flex-col flex-1 gap-1 text-center sm:text-left w-full">
-        <h2 className="text-lg font-semibold truncate">{asset.nombre}</h2>
-        <p className="text-sm text-gray-600 truncate">{asset.descripcion}</p>
+        <h2 className="text-lg font-semibold truncate">{asset.name}</h2>
+        <p className="text-sm text-gray-600 truncate">{asset.details}</p>
         <span className="text-xs bg-gray-200 px-2 py-1 rounded inline-block w-fit">
           {asset.codigo}
         </span>
