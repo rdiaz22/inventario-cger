@@ -12,14 +12,35 @@ const FichaActivo = () => {
 
   useEffect(() => {
     const fetchActivo = async () => {
-      const { data, error } = await supabase
+      // Primero buscar en la tabla assets
+      let { data, error } = await supabase
         .from("assets")
         .select("*")
         .eq("id", id)
         .single();
 
+      // Si no se encuentra en assets, buscar en epi_assets
       if (error) {
-        console.error("Error al cargar activo", error);
+        const { data: epiData, error: epiError } = await supabase
+          .from("epi_assets")
+          .select(`
+            *,
+            epi_sizes (*)
+          `)
+          .eq("id", id)
+          .single();
+
+        if (epiError) {
+          console.error("Error al cargar activo", epiError);
+        } else {
+          // Formatear datos de EPI para que sean compatibles
+          setActivo({
+            ...epiData,
+            category: "EPI",
+            codigo: epiData.codigo || `EPI-${epiData.id.slice(0, 8).toUpperCase()}`,
+            tallas: epiData.epi_sizes || []
+          });
+        }
       } else {
         setActivo(data);
       }
@@ -72,6 +93,25 @@ const FichaActivo = () => {
               <p><strong>Asignado a:</strong> {activo.assigned_to}</p>
               <p><strong>Código:</strong> {activo.codigo}</p>
               <p><strong>Propiedad:</strong> CGER, La Palma</p>
+              
+              {/* Información específica para EPIs */}
+              {activo.category === "EPI" && (
+                <>
+                  <p><strong>Proveedor:</strong> {activo.supplier || "No disponible"}</p>
+                  {activo.tallas && activo.tallas.length > 0 && (
+                    <div>
+                      <p><strong>Tallas y Unidades:</strong></p>
+                      <div className="ml-4 space-y-1">
+                        {activo.tallas.map((talla, index) => (
+                          <p key={index} className="text-sm">
+                            • {talla.size}: {talla.units} unidades
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <button
