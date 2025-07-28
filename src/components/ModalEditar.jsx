@@ -128,9 +128,23 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
       }
 
       // También actualizar en assets para mantener consistencia
+      // Solo campos que existen en la tabla assets
+      const assetUpdateData = {
+        name: formData.name,
+        brand: formData.brand,
+        model: formData.model,
+        details: formData.details,
+        serial_number: formData.serial_number,
+        assigned_to: formData.assigned_to,
+        category: formData.category,
+        fecha_compra: formData.fecha_compra,
+        status: formData.status,
+        image_url: imageUrl
+      };
+
       const { error: assetError } = await supabase
         .from("assets")
-        .update({ ...formData, image_url: imageUrl })
+        .update(assetUpdateData)
         .eq("id", asset.id);
 
       if (assetError) {

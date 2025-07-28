@@ -133,6 +133,7 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
         }
 
         // También guardar en assets para mantener consistencia
+        // Solo campos que existen en la tabla assets
         const assetData = {
           name: form.name,
           brand: form.brand,
