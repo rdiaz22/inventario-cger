@@ -24,17 +24,20 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           .eq("id", asset.id)
           .single();
 
+        // Buscar en assets por nombre para encontrar el registro correspondiente
         const { data: assetData, error: assetError } = await supabase
           .from("assets")
           .select("*")
-          .eq("id", asset.id)
+          .eq("name", asset.name)
+          .eq("category", "EPI")
           .single();
 
-        if (!epiError && !assetError) {
+        if (!epiError) {
           setFormData({
-            ...assetData, // Datos generales de assets
-            ...epiData,   // Datos específicos de epi_assets
-            image_url: epiData.image_url || assetData.image_url || ""
+            ...asset, // Usar los datos que ya tenemos del asset
+            ...epiData, // Agregar datos específicos de epi_assets
+            ...(assetData || {}), // Agregar datos de assets si existen
+            image_url: epiData.image_url || asset.image_url || ""
           });
           
           // Cargar tallas
