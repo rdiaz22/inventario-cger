@@ -46,7 +46,7 @@ function App() {
           }
         />
         <Route path="/activos/:id" element={<FichaActivo />} />
-        <Route path="/categorias" element={<CategoriasConfig />} />
+        <Route path="/configuracion/categorias" element={<CategoriasConfig />} />
       </Routes>
     </Router>
   );
