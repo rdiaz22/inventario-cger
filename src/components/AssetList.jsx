@@ -158,6 +158,14 @@ const AssetList = () => {
             
             assetData = basicAssetData;
             console.log("Datos básicos creados:", basicAssetData); // Debug
+            console.log("Campos específicos:", {
+              name: basicAssetData.name,
+              brand: basicAssetData.brand,
+              model: basicAssetData.model,
+              details: basicAssetData.details,
+              status: basicAssetData.status,
+              assigned_to: basicAssetData.assigned_to
+            }); // Debug
           }
           
           const completeAsset = {
@@ -168,6 +176,17 @@ const AssetList = () => {
           };
           
           console.log("Asset completo:", completeAsset); // Debug
+          console.log("Campos finales del asset:", {
+            name: completeAsset.name,
+            brand: completeAsset.brand,
+            model: completeAsset.model,
+            details: completeAsset.details,
+            status: completeAsset.status,
+            assigned_to: completeAsset.assigned_to,
+            supplier: completeAsset.supplier,
+            fabricante: completeAsset.fabricante,
+            certificacion: completeAsset.certificacion
+          }); // Debug
           setSelectedAsset(completeAsset);
         }
       } else {
