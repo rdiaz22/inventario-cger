@@ -12,39 +12,77 @@ const FichaActivo = () => {
 
   useEffect(() => {
     const fetchActivo = async () => {
-      // Primero buscar en la tabla assets
-      let { data, error } = await supabase
-        .from("assets")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      // Si no se encuentra en assets, buscar en epi_assets
-      if (error) {
-        const { data: epiData, error: epiError } = await supabase
-          .from("epi_assets")
-          .select(`
-            *,
-            epi_sizes (*)
-          `)
+      try {
+        // Primero buscar en la tabla assets
+        let { data, error } = await supabase
+          .from("assets")
+          .select("*")
           .eq("id", id)
           .single();
 
-        if (epiError) {
-          console.error("Error al cargar activo", epiError);
+        // Si se encuentra en assets, verificar si es un EPI
+        if (!error && data) {
+          if (data.category === "EPI") {
+            // Es un EPI en assets, buscar datos adicionales en epi_assets
+            const { data: epiData, error: epiError } = await supabase
+              .from("epi_assets")
+              .select(`
+                *,
+                epi_sizes (*)
+              `)
+              .eq("codigo", data.codigo)
+              .single();
+
+            if (!epiError && epiData) {
+              setActivo({
+                ...data, // Datos generales de assets
+                ...epiData, // Datos específicos de epi_assets
+                tallas: epiData.epi_sizes || []
+              });
+            } else {
+              setActivo(data);
+            }
+          } else {
+            // Es un activo normal
+            setActivo(data);
+          }
         } else {
-          // Formatear datos de EPI para que sean compatibles
-          setActivo({
-            ...epiData,
-            category: "EPI",
-            codigo: epiData.codigo || `EPI-${epiData.id.slice(0, 8).toUpperCase()}`,
-            tallas: epiData.epi_sizes || []
-          });
+          // No se encuentra en assets, buscar en epi_assets
+          const { data: epiData, error: epiError } = await supabase
+            .from("epi_assets")
+            .select(`
+              *,
+              epi_sizes (*)
+            `)
+            .eq("id", id)
+            .single();
+
+          if (epiError) {
+            console.error("Error al cargar activo", epiError);
+          } else {
+            // Buscar datos generales en assets por código
+            const { data: assetData, error: assetError } = await supabase
+              .from("assets")
+              .select("*")
+              .eq("codigo", epiData.codigo)
+              .eq("category", "EPI")
+              .single();
+
+            // Combinar datos de ambas tablas
+            setActivo({
+              ...epiData, // Datos específicos de epi_assets
+              ...(assetData || {}), // Datos generales de assets (si existen)
+              category: "EPI",
+              codigo: epiData.codigo || `EPI-${epiData.id.slice(0, 8).toUpperCase()}`,
+              tallas: epiData.epi_sizes || []
+            });
+          }
         }
-      } else {
-        setActivo(data);
+      } catch (error) {
+        console.error("Error al cargar activo:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchActivo();
