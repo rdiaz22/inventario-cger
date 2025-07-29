@@ -87,6 +87,8 @@ const AssetList = () => {
   const handleAssetClick = async (asset) => {
     setIsLoadingAsset(true);
     
+    console.log("Asset clickeado:", asset); // Debug
+    
     try {
       if (asset.category === "EPI") {
         // Para EPIs, cargar datos de ambas tablas
@@ -99,12 +101,18 @@ const AssetList = () => {
           .eq("id", asset.id)
           .single();
 
+        console.log("Datos de epi_assets:", epiData); // Debug
+        console.log("Error epi_assets:", epiError); // Debug
+
         const { data: assetData, error: assetError } = await supabase
           .from("assets")
           .select("*")
           .eq("codigo", asset.codigo)
           .eq("category", "EPI")
           .single();
+
+        console.log("Datos de assets:", assetData); // Debug
+        console.log("Error assets:", assetError); // Debug
 
         if (!epiError) {
           const completeAsset = {
@@ -113,6 +121,8 @@ const AssetList = () => {
             ...(assetData || {}), // Datos generales de assets
             tallas: epiData.epi_sizes || []
           };
+          
+          console.log("Asset completo:", completeAsset); // Debug
           setSelectedAsset(completeAsset);
         }
       } else {
