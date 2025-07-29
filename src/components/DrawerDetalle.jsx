@@ -8,6 +8,20 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
+  // Debug: ver qué datos recibe el componente
+  console.log("DrawerDetalle recibió asset:", asset);
+  console.log("Campos específicos en DrawerDetalle:", {
+    name: asset?.name,
+    brand: asset?.brand,
+    model: asset?.model,
+    details: asset?.details,
+    status: asset?.status,
+    assigned_to: asset?.assigned_to,
+    supplier: asset?.supplier,
+    fabricante: asset?.fabricante,
+    certificacion: asset?.certificacion
+  });
+
   if (!asset) return null;
 
   const DetailItem = ({ label, value }) => (
