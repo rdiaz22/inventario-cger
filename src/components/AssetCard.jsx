@@ -43,17 +43,17 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   return (
     <div
       onClick={onClick} // Usar la prop onClick
-      className="cursor-pointer rounded-xl border shadow-sm hover:shadow-md transition-shadow p-4 bg-white flex flex-col sm:flex-row items-center sm:items-start gap-4 w-full"
+      className="cursor-pointer rounded-xl border shadow-sm hover:shadow-md transition-shadow p-4 bg-white flex flex-col sm:flex-row items-center sm:items-start gap-4 w-full min-w-0"
     >
       {/* Imagen */}
       <img
         src={asset.image_url}
         alt={asset.name}
-        className="w-full sm:w-32 h-32 object-cover rounded-md"
+        className="w-full sm:w-32 h-32 object-cover rounded-md flex-shrink-0"
       />
 
       {/* Info */}
-      <div className="flex flex-col flex-1 gap-1 text-center sm:text-left w-full">
+      <div className="flex flex-col flex-1 gap-1 text-center sm:text-left w-full min-w-0">
         <h2 className="text-lg font-semibold truncate">{asset.name}</h2>
         <p className="text-sm text-gray-600 truncate">{asset.details}</p>
         <span className="text-xs bg-gray-200 px-2 py-1 rounded inline-block w-fit">
@@ -62,20 +62,20 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       </div>
 
       {/* Acciones */}
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center gap-2 flex-shrink-0">
         <button
           onClick={(e) => {
             e.stopPropagation();
             setShowQR(!showQR);
           }}
-          className="text-sm text-blue-500 hover:underline flex items-center gap-1"
+          className="text-sm text-blue-500 hover:underline flex items-center gap-1 whitespace-nowrap"
         >
           <FaEye />
           Ver QR
         </button>
         <button
           onClick={handlePrint}
-          className="text-sm text-green-600 hover:underline flex items-center gap-1"
+          className="text-sm text-green-600 hover:underline flex items-center gap-1 whitespace-nowrap"
         >
           <FaPrint />
           Imprimir
