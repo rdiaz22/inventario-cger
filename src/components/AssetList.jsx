@@ -132,6 +132,34 @@ const AssetList = () => {
         console.log("Error assets:", assetError); // Debug
 
         if (!epiError) {
+          // Si no encontramos datos en assets, crear un registro básico
+          if (!assetData) {
+            console.log("No se encontró registro en assets, creando uno básico..."); // Debug
+            
+            // Crear datos básicos para assets basados en epi_assets
+            const basicAssetData = {
+              name: epiData.name,
+              model: epiData.model || '',
+              brand: epiData.brand || '',
+              details: epiData.details || '',
+              status: epiData.status || 'Disponible',
+              assigned_to: epiData.assigned_to || '',
+              category: 'EPI',
+              codigo: epiData.codigo || `EPI-${epiData.id.slice(0, 8).toUpperCase()}`,
+              image_url: epiData.image_url || '',
+              serial_number: epiData.serial_number || '',
+              location: epiData.location || '',
+              purchase_date: epiData.purchase_date || null,
+              warranty_expiry: epiData.warranty_expiry || null,
+              supplier: epiData.supplier || '',
+              fabricante: epiData.fabricante || '',
+              certificacion: epiData.certificacion || ''
+            };
+            
+            assetData = basicAssetData;
+            console.log("Datos básicos creados:", basicAssetData); // Debug
+          }
+          
           const completeAsset = {
             ...asset, // Datos base
             ...epiData, // Datos específicos de epi_assets
