@@ -38,7 +38,9 @@ const AssetList = () => {
     if (epiError) console.error("Error al cargar EPIs:", epiError);
 
     // Combinar y formatear datos
-    const normalAssets = (assetsData || []).filter(asset => asset.category !== "EPI");
+    const normalAssets = (assetsData || []).filter(asset => 
+      !asset.category || asset.category.toLowerCase() !== "epi"
+    );
     const epiAssets = (epiData || []).map(epi => ({
       ...epi,
       id: epi.id,
