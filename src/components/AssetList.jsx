@@ -104,12 +104,29 @@ const AssetList = () => {
         console.log("Datos de epi_assets:", epiData); // Debug
         console.log("Error epi_assets:", epiError); // Debug
 
-        const { data: assetData, error: assetError } = await supabase
+        // Intentar buscar por código primero
+        let { data: assetData, error: assetError } = await supabase
           .from("assets")
           .select("*")
           .eq("codigo", asset.codigo)
           .eq("category", "EPI")
           .single();
+
+        // Si no se encuentra por código, intentar por nombre
+        if (assetError) {
+          console.log("Buscando por nombre como fallback..."); // Debug
+          const { data: assetDataByName, error: assetErrorByName } = await supabase
+            .from("assets")
+            .select("*")
+            .eq("name", asset.name)
+            .eq("category", "EPI")
+            .single();
+          
+          if (!assetErrorByName) {
+            assetData = assetDataByName;
+            assetError = null;
+          }
+        }
 
         console.log("Datos de assets:", assetData); // Debug
         console.log("Error assets:", assetError); // Debug
