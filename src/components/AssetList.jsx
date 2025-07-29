@@ -9,6 +9,7 @@ const AssetList = () => {
   const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [isLoadingAsset, setIsLoadingAsset] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
@@ -83,6 +84,49 @@ const AssetList = () => {
     setSelectedCategory((prev) => (prev === category ? null : category));
   };
 
+  const handleAssetClick = async (asset) => {
+    setIsLoadingAsset(true);
+    
+    try {
+      if (asset.category === "EPI") {
+        // Para EPIs, cargar datos de ambas tablas
+        const { data: epiData, error: epiError } = await supabase
+          .from("epi_assets")
+          .select(`
+            *,
+            epi_sizes (*)
+          `)
+          .eq("id", asset.id)
+          .single();
+
+        const { data: assetData, error: assetError } = await supabase
+          .from("assets")
+          .select("*")
+          .eq("codigo", asset.codigo)
+          .eq("category", "EPI")
+          .single();
+
+        if (!epiError) {
+          const completeAsset = {
+            ...asset, // Datos base
+            ...epiData, // Datos específicos de epi_assets
+            ...(assetData || {}), // Datos generales de assets
+            tallas: epiData.epi_sizes || []
+          };
+          setSelectedAsset(completeAsset);
+        }
+      } else {
+        // Para activos normales, usar los datos que ya tenemos
+        setSelectedAsset(asset);
+      }
+    } catch (error) {
+      console.error("Error cargando datos del activo:", error);
+      setSelectedAsset(asset); // Usar datos básicos si hay error
+    } finally {
+      setIsLoadingAsset(false);
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
@@ -150,7 +194,7 @@ const AssetList = () => {
           <AssetCard
             key={asset.id}
             asset={asset}
-            onClick={() => setSelectedAsset(asset)}
+            onClick={() => handleAssetClick(asset)}
           />
         ))}
       </div>
