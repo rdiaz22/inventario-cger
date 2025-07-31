@@ -64,7 +64,7 @@ const Sidebar = ({ onCategoriasClick }) => {
   return (
     <>
       {/* Menú hamburguesa en móviles */}
-      <div className="md:hidden flex items-center justify-between p-4 border-b bg-white">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 border-b bg-white shadow-md">
         <span className="font-semibold text-lg">Inventory App</span>
         <button onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -73,7 +73,7 @@ const Sidebar = ({ onCategoriasClick }) => {
 
       {/* Menú deslizable en móvil */}
       {isOpen && (
-        <div className="md:hidden fixed top-[60px] left-0 z-50 w-64 h-full bg-white border-r shadow-lg p-4">
+        <div className="md:hidden fixed top-0 left-0 z-40 w-64 h-screen bg-white shadow-lg p-4 pt-16">
           <nav className="flex flex-col gap-2 text-sm font-medium">{renderMenuItems()}</nav>
         </div>
       )}
