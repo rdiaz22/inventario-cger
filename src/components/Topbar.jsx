@@ -24,7 +24,7 @@ const Topbar = () => {
       <div className="text-lg font-semibold text-gray-700">
         Inventario de Activos
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 mt-2">
         <span className="text-sm text-gray-600">{userEmail}</span>
         <button
           onClick={handleLogout}
