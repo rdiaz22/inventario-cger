@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "react-router-dom";
-import { Package, Layers, Settings, ClipboardList, Wrench, CalendarCheck, Box, User, Home } from "lucide-react";
+import { Package, Layers, Settings, ClipboardList, Wrench, CalendarCheck, Box, User, Home, Scan, ScanBarcode  } from "lucide-react";
 
 const Sidebar = ({ onCategoriasClick }) => {
   const location = useLocation();
@@ -70,6 +70,18 @@ const Sidebar = ({ onCategoriasClick }) => {
               <Layers className="h-4 w-4" />
               Categorías
             </button>
+            <NavLink
+              to="/escanear"
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:text-primary ${
+                  isActive ? "bg-muted text-primary" : "text-muted-foreground"
+                }`
+              }
+            >
+              <ScanBarcode  className="w-5 h-5" />
+              <span>Escanear</span>
+            </NavLink>
+
           </nav>
         </div>
       </div>

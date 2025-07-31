@@ -7,6 +7,9 @@ import Login from "./components/Login";
 import Topbar from "./components/Topbar";
 import FichaActivo from "./components/FichaActivo";
 import CategoriasConfig from "./components/CategoriasConfig";
+import BarcodeScanner from '@/components/BarcodeScanner';
+import Escanear from "./components/Escanear";
+
 
 function App() {
   const [session, setSession] = useState(null);
@@ -47,6 +50,8 @@ function App() {
           }
         />
         <Route path="/activos/:id" element={<FichaActivo />} />
+        <Route path="/escanear" element={<BarcodeScanner />} />
+        <Route path="/escanear" element={<Escanear />} />
       </Routes>
       
       <CategoriasConfig 
