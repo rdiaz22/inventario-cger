@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../supabaseClient';
 
 const BarcodeScanner = () => {
   const [scannedCode, setScannedCode] = useState(null);
