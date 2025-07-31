@@ -20,11 +20,11 @@ const Topbar = () => {
   };
 
   return (
-    <header className="w-full bg-gray-200 px-6 py-3 flex justify-between items-center border-b border-gray-300 shadow-sm ">
+    <header className="w-full bg-gray-200 px-6 py-3 flex justify-between items-center border-b border-gray-300 shadow-sm">
       <div className="text-lg font-semibold text-gray-700">
         Inventario de Activos
       </div>
-      <div className="flex items-center gap-4 mt-2 mt-[60px]">
+      <div className="flex items-center gap-4 mt-[60px]">
         <span className="text-sm text-gray-600">{userEmail}</span>
         <button
           onClick={handleLogout}
@@ -38,4 +38,3 @@ const Topbar = () => {
 };
 
 export default Topbar;
-
