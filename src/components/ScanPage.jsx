@@ -18,6 +18,13 @@ const ScanPage = () => {
 
   const handleScan = async (code) => {
     console.log('🔍 Procesando código escaneado:', code);
+    
+    // Evitar procesar el mismo código múltiples veces
+    if (scannedCode === code) {
+      console.log('⚠️ Código ya procesado, ignorando...');
+      return;
+    }
+    
     setScannedCode(code);
     setSuccessMessage('');
 
@@ -71,7 +78,7 @@ const ScanPage = () => {
   };
 
   const handleGoHome = () => {
-    navigate('/activos');
+    navigate('/');
   };
 
   return (

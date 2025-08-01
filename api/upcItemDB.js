@@ -3,6 +3,17 @@ export async function fetchProductDataFromUPC(upc) {
 
   try {
     const response = await fetch(URL);
+    
+    if (response.status === 429) {
+      console.warn('⚠️ Demasiadas solicitudes a la API. Esperando...');
+      return null;
+    }
+    
+    if (!response.ok) {
+      console.error('Error en la respuesta de la API:', response.status);
+      return null;
+    }
+
     const data = await response.json();
 
     if (data.items && data.items.length > 0) {
