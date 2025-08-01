@@ -7,10 +7,9 @@ import Login from "./components/Login";
 import Topbar from "./components/Topbar";
 import FichaActivo from "./components/FichaActivo";
 import CategoriasConfig from "./components/CategoriasConfig";
-import BarcodeScanner from '@/components/BarcodeScanner';
-import Escanear from "./components/Escanear";
-
-
+import ScanPage from './components/ScanPage';
+import { Toaster } from 'react-hot-toast';
+  
 function App() {
   const [session, setSession] = useState(null);
   const [isCategoriasModalOpen, setIsCategoriasModalOpen] = useState(false);
@@ -49,11 +48,10 @@ function App() {
             </div>
           }
         />
-        <Route path="/activos/:id" element={<FichaActivo />} />
-        <Route path="/escanear" element={<BarcodeScanner />} />
-        <Route path="/escanear" element={<Escanear />} />
+        <Route path="/activos/:id" element={<FichaActivo />} /> 
+        <Route path="/escanear" element={<ScanPage />} />     
       </Routes>
-      
+      <Toaster position="top-right" />  
       <CategoriasConfig 
         isOpen={isCategoriasModalOpen} 
         onClose={() => setIsCategoriasModalOpen(false)} 
