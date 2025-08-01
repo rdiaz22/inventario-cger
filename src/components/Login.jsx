@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import logo from "../assets/logo_inventario_app.png";
 
@@ -64,7 +65,7 @@ const Login = () => {
           </button>
         </form>
         <p className="text-sm mt-4 text-center">
-          ¿No tienes cuenta? <a href="/registro" className="text-blue-600 hover:underline">Regístrate aquí</a>
+          ¿No tienes cuenta? <Link to="/registro" className="text-blue-600 hover:underline">Regístrate aquí</Link>
         </p>
       </div>
     </div>

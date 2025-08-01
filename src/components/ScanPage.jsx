@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import BarcodeScanner from '../components/BarcodeScanner';
 import { supabase } from '../supabaseClient';
 import toast from 'react-hot-toast';
-import { fetchProductDataFromUPC } from '../api/upcItemDB';
+import { fetchProductDataFromUPC } from '../../api/upcItemDB';
 
 const ScanPage = () => {
   const [scannedCode, setScannedCode] = useState('');

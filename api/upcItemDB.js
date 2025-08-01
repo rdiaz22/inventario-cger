@@ -21,4 +21,4 @@ export async function fetchProductDataFromUPC(upc) {
     console.error('Error consultando UPCItemDB:', error);
     return null;
   }
-}
+} 

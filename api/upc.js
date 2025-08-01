@@ -1,4 +1,4 @@
-// src/api/upc.js
+// api/upc.js
 export default async function handler(req, res) {
     const { code } = req.query;
   
@@ -20,5 +20,4 @@ export default async function handler(req, res) {
     } catch (error) {
       res.status(500).json({ error: 'Error interno al hacer fetch' });
     }
-  }
-  
+  } 

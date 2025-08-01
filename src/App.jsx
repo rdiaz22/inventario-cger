@@ -4,6 +4,7 @@ import { supabase } from "./supabaseClient";
 import Sidebar from "./components/Sidebar";
 import AssetList from "./components/AssetList";
 import Login from "./components/Login";
+import Registro from "./components/Registro";
 import Topbar from "./components/Topbar";
 import FichaActivo from "./components/FichaActivo";
 import CategoriasConfig from "./components/CategoriasConfig";
@@ -29,7 +30,14 @@ function App() {
   }, []);
 
   if (!session) {
-    return <Login />;
+    return (
+      <Router>
+        <Routes>
+          <Route path="/registro" element={<Registro />} />
+          <Route path="*" element={<Login />} />
+        </Routes>
+      </Router>
+    );
   }
 
   return (
