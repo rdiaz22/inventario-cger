@@ -175,6 +175,8 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         assigned_to: formData.assigned_to,
         category: formData.category,
         fecha_compra: formData.fecha_compra,
+        fecha_garantia: formData.fecha_garantia,
+        precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null,
         status: formData.status,
         image_url: imageUrl
       };
@@ -241,6 +243,31 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           name="serial_number"
           placeholder="Número de serie"
           value={formData.serial_number || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+        />
+        <input
+          type="date"
+          name="fecha_compra"
+          placeholder="Fecha de Compra"
+          value={formData.fecha_compra?.split('T')[0] || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+        />
+        <input
+          type="date"
+          name="fecha_garantia"
+          placeholder="Fecha de Garantía"
+          value={formData.fecha_garantia?.split('T')[0] || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+        />
+        <input
+          type="number"
+          step="0.01"
+          name="precio_compra"
+          placeholder="Precio de Compra (€)"
+          value={formData.precio_compra || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
         />

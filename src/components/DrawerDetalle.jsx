@@ -71,9 +71,25 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
             <DetailItem
               label="Fecha de Compra"
               value={
-                asset.purchase_date
-                  ? new Date(asset.purchase_date).toLocaleDateString("es-ES")
+                asset.fecha_compra
+                  ? new Date(asset.fecha_compra).toLocaleDateString("es-ES")
                   : "No registrada"
+              }
+            />
+            <DetailItem
+              label="Fecha de Garantía"
+              value={
+                asset.fecha_garantia
+                  ? new Date(asset.fecha_garantia).toLocaleDateString("es-ES")
+                  : "No registrada"
+              }
+            />
+            <DetailItem
+              label="Precio de Compra"
+              value={
+                asset.precio_compra
+                  ? `${parseFloat(asset.precio_compra).toFixed(2)} €`
+                  : "No registrado"
               }
             />
             

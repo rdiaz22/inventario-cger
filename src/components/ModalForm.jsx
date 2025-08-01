@@ -34,6 +34,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
     assigned_to: "",
     category: "",
     fecha_compra: "",
+    fecha_garantia: "",
+    precio_compra: "",
     status: "Activo", // valor por defecto
     // Campos específicos para EPIs
     supplier: "",
@@ -155,6 +157,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           assigned_to: form.assigned_to,
           category: form.category,
           fecha_compra: form.fecha_compra,
+          fecha_garantia: form.fecha_garantia,
+          precio_compra: form.precio_compra ? parseFloat(form.precio_compra) : null,
           status: form.status,
           image_url: imageUrl,
           codigo
@@ -178,6 +182,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           assigned_to: form.assigned_to,
           category: form.category,
           fecha_compra: form.fecha_compra,
+          fecha_garantia: form.fecha_garantia,
+          precio_compra: form.precio_compra ? parseFloat(form.precio_compra) : null,
           status: form.status,
           image_url: imageUrl
         };
@@ -204,6 +210,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           <input name="serial_number" onChange={handleChange} placeholder="Número de serie" className="border p-2 w-full" />
           <input name="assigned_to" onChange={handleChange} placeholder="Asignado a" className="border p-2 w-full" />
           <input type="date" value={form.fecha_compra?.split('T')[0] || ""} name="fecha_compra" onChange={handleChange} placeholder="Fecha de Compra" className="border p-2 w-full" />
+          <input type="date" value={form.fecha_garantia?.split('T')[0] || ""} name="fecha_garantia" onChange={handleChange} placeholder="Fecha de Garantía" className="border p-2 w-full" />
+          <input type="number" step="0.01" name="precio_compra" onChange={handleChange} placeholder="Precio de Compra (€)" className="border p-2 w-full" />
           <select name="category" onChange={handleChange} className="border p-2 w-full">
             <option value="">Selecciona una categoría</option>
             {categorias.map((cat, i) => ( 

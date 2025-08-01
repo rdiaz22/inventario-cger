@@ -130,6 +130,9 @@ const FichaActivo = () => {
               <p><strong>Estado:</strong> {activo.status}</p>
               <p><strong>Asignado a:</strong> {activo.assigned_to}</p>
               <p><strong>Código:</strong> {activo.codigo}</p>
+              <p><strong>Fecha de Compra:</strong> {activo.fecha_compra ? new Date(activo.fecha_compra).toLocaleDateString("es-ES") : "No registrada"}</p>
+              <p><strong>Fecha de Garantía:</strong> {activo.fecha_garantia ? new Date(activo.fecha_garantia).toLocaleDateString("es-ES") : "No registrada"}</p>
+              <p><strong>Precio de Compra:</strong> {activo.precio_compra ? `${parseFloat(activo.precio_compra).toFixed(2)} €` : "No registrado"}</p>
               <p><strong>Propiedad:</strong> CGER, La Palma</p>
               
               {/* Información específica para EPIs */}
