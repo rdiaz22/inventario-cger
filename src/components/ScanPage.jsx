@@ -8,42 +8,45 @@ const ScanPage = () => {
   const [scannedCode, setScannedCode] = useState('');
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
+    details: '',
     category: '',
+    image_url: '',
   });
   const [successMessage, setSuccessMessage] = useState('');
 
   const handleScan = async (code) => {
     setScannedCode(code);
     setSuccessMessage('');
-  
+
     const product = await fetchProductDataFromUPC(code);
-  
+
     if (product) {
       setFormData({
         name: product.title || '',
-        description: product.description || '',
+        details: product.description || '',
         category: product.category || '',
+        image_url: product.image || '',
       });
     } else {
       toast.error('⚠️ Producto no encontrado. Rellena los datos manualmente.');
-      setFormData({ name: '', description: '', category: '' });
+      setFormData({ name: '', details: '', category: '', image_url: '' });
     }
   };
-  
+
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSave = async () => {
-    const { name, description, category } = formData;
+    const { name, details, category, image_url } = formData;
 
-    const { data, error } = await supabase.from('assets').insert([
+    const { error } = await supabase.from('assets').insert([
       {
-        code: scannedCode,
+        codigo: scannedCode,
         name,
-        description,
+        details,
         category,
+        image_url,
       },
     ]);
 
@@ -53,7 +56,7 @@ const ScanPage = () => {
     } else {
       toast.success('✅ Producto guardado correctamente');
       setScannedCode('');
-      setFormData({ name: '', description: '', category: '' });
+      setFormData({ name: '', details: '', category: '', image_url: '' });
     }
   };
 
@@ -79,9 +82,9 @@ const ScanPage = () => {
           />
           <textarea
             className="border px-2 py-1 w-full mb-2"
-            name="description"
+            name="details"
             placeholder="Descripción"
-            value={formData.description}
+            value={formData.details}
             onChange={handleChange}
           />
           <input
@@ -89,6 +92,13 @@ const ScanPage = () => {
             name="category"
             placeholder="Categoría"
             value={formData.category}
+            onChange={handleChange}
+          />
+          <input
+            className="border px-2 py-1 w-full mb-2"
+            name="image_url"
+            placeholder="URL de imagen"
+            value={formData.image_url}
             onChange={handleChange}
           />
           <button
