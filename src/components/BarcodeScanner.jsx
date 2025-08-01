@@ -1,4 +1,4 @@
-// BarcodeScanner.jsx (actualizado y listo para probar)
+// BarcodeScanner.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { fetchProductDataFromUPC } from '../api/upcItemDB';
@@ -7,53 +7,53 @@ import toast from 'react-hot-toast';
 const BarcodeScanner = ({ onDetected }) => {
   const videoRef = useRef(null);
   const [scannedCode, setScannedCode] = useState(null);
+  const [reader, setReader] = useState(null);
 
   useEffect(() => {
     const codeReader = new BrowserMultiFormatReader();
+    setReader(codeReader);
     console.log('📸 Iniciando cámara para escanear...');
 
-    codeReader.listVideoInputDevices()
-      .then((videoInputDevices) => {
-        const selectedDeviceId = videoInputDevices[0]?.deviceId;
-        if (!selectedDeviceId) {
-          console.error('🚫 No se encontró cámara disponible.');
-          toast.error('No se encontró cámara');
-          return;
+    // Intentar acceder a la cámara directamente
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then((stream) => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
         }
 
-        codeReader.decodeFromVideoDevice(
-          selectedDeviceId,
-          videoRef.current,
-          async (result, error) => {
-            if (result) {
-              const code = result.getText();
+        codeReader.decodeFromVideoDevice(null, videoRef.current, async (result, error) => {
+          if (result) {
+            const code = result.getText();
+            if (code !== scannedCode) {
               console.log('✅ Código detectado:', code);
               setScannedCode(code);
               toast.success(`Código: ${code}`);
 
-              // Busca info en API externa y llama a función padre
               const productData = await fetchProductDataFromUPC(code);
               if (productData) {
                 onDetected(productData);
               }
 
-              codeReader.reset();
-            }
-            if (error) {
-              // Evitamos spam de errores en consola
+              codeReader.reset(); // Detener escaneo tras encontrar código
+              stream.getTracks().forEach((track) => track.stop()); // Apagar cámara
             }
           }
-        );
+        });
       })
       .catch((err) => {
-        console.error('❌ Error accediendo a cámara:', err);
-        toast.error('Error accediendo a cámara');
+        console.error('❌ No se pudo acceder a la cámara', err);
+        toast.error('No se pudo acceder a la cámara');
       });
 
     return () => {
-      codeReader.reset();
+      if (reader) {
+        reader.reset();
+      }
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      }
     };
-  }, [onDetected]);
+  }, [onDetected, scannedCode]);
 
   return (
     <div className="flex flex-col items-center gap-4">
