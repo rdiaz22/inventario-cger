@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BarcodeScanner from '../components/BarcodeScanner';
 import { supabase } from '../supabaseClient';
 import toast from 'react-hot-toast';
 import { fetchProductDataFromUPC } from '../../api/upcItemDB';
 
 const ScanPage = () => {
+  const navigate = useNavigate();
   const [scannedCode, setScannedCode] = useState('');
   const [formData, setFormData] = useState({
     name: '',
@@ -15,20 +17,28 @@ const ScanPage = () => {
   const [successMessage, setSuccessMessage] = useState('');
 
   const handleScan = async (code) => {
+    console.log('🔍 Procesando código escaneado:', code);
     setScannedCode(code);
     setSuccessMessage('');
 
-    const product = await fetchProductDataFromUPC(code);
+    try {
+      const product = await fetchProductDataFromUPC(code);
 
-    if (product) {
-      setFormData({
-        name: product.title || '',
-        details: product.description || '',
-        category: product.category || '',
-        image_url: product.image || '',
-      });
-    } else {
-      toast.error('⚠️ Producto no encontrado. Rellena los datos manualmente.');
+      if (product) {
+        setFormData({
+          name: product.title || '',
+          details: product.description || '',
+          category: product.category || '',
+          image_url: product.image || '',
+        });
+        toast.success('✅ Producto encontrado en la base de datos');
+      } else {
+        toast.error('⚠️ Producto no encontrado. Rellena los datos manualmente.');
+        setFormData({ name: '', details: '', category: '', image_url: '' });
+      }
+    } catch (error) {
+      console.error('Error al buscar producto:', error);
+      toast.error('❌ Error al buscar el producto');
       setFormData({ name: '', details: '', category: '', image_url: '' });
     }
   };
@@ -60,9 +70,22 @@ const ScanPage = () => {
     }
   };
 
+  const handleGoHome = () => {
+    navigate('/activos');
+  };
+
   return (
     <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-xl font-semibold mb-4">Escanear código de barras</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-semibold">Escanear código de barras</h1>
+        <button
+          onClick={handleGoHome}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center gap-2"
+        >
+          <span>✕</span>
+          Cerrar cámara
+        </button>
+      </div>
       {!scannedCode && <BarcodeScanner onScan={handleScan} />}
 
       {scannedCode && (
@@ -101,12 +124,26 @@ const ScanPage = () => {
             value={formData.image_url}
             onChange={handleChange}
           />
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            onClick={handleSave}
-          >
-            Guardar producto escaneado
-          </button>
+                     <div className="flex gap-2">
+             <button
+               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+               onClick={handleSave}
+             >
+               Guardar producto escaneado
+             </button>
+             <button
+               className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+               onClick={() => setScannedCode('')}
+             >
+               Escanear otro código
+             </button>
+             <button
+               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+               onClick={handleGoHome}
+             >
+               Volver al inicio
+             </button>
+           </div>
         </div>
       )}
 
