@@ -1,90 +1,72 @@
+// BarcodeScanner.jsx (actualizado y listo para probar)
 import React, { useEffect, useRef, useState } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
-import { NotFoundException } from '@zxing/library';
 import { fetchProductDataFromUPC } from '../api/upcItemDB';
+import toast from 'react-hot-toast';
 
-const BarcodeScanner = ({ onScan }) => {
+const BarcodeScanner = ({ onDetected }) => {
   const videoRef = useRef(null);
-  const codeReader = useRef(null);
-  const [error, setError] = useState(null);
-  const [productInfo, setProductInfo] = useState(null);
   const [scannedCode, setScannedCode] = useState(null);
 
   useEffect(() => {
-    codeReader.current = new BrowserMultiFormatReader();
+    const codeReader = new BrowserMultiFormatReader();
+    console.log('📸 Iniciando cámara para escanear...');
 
-    const startScanner = async () => {
-      try {
-        const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-        if (devices.length === 0) {
-          setError('No se encontraron cámaras');
+    codeReader.listVideoInputDevices()
+      .then((videoInputDevices) => {
+        const selectedDeviceId = videoInputDevices[0]?.deviceId;
+        if (!selectedDeviceId) {
+          console.error('🚫 No se encontró cámara disponible.');
+          toast.error('No se encontró cámara');
           return;
         }
 
-        const selectedDeviceId = devices[0].deviceId;
-
-        codeReader.current.decodeFromVideoDevice(
+        codeReader.decodeFromVideoDevice(
           selectedDeviceId,
           videoRef.current,
-          async (result, err) => {
+          async (result, error) => {
             if (result) {
               const code = result.getText();
-              codeReader.current.reset(); // Detener escaneo tras detectar código
+              console.log('✅ Código detectado:', code);
               setScannedCode(code);
+              toast.success(`Código: ${code}`);
 
-              try {
-                const data = await fetchProductDataFromUPC(code);
-                setProductInfo(data); // Mostrar producto
-              } catch (apiError) {
-                console.error('Error buscando producto:', apiError);
-                setError('Producto no encontrado');
+              // Busca info en API externa y llama a función padre
+              const productData = await fetchProductDataFromUPC(code);
+              if (productData) {
+                onDetected(productData);
               }
+
+              codeReader.reset();
             }
-            if (err && !(err instanceof NotFoundException)) {
-              console.error('Error escaneando:', err);
-              setError('Error escaneando código');
+            if (error) {
+              // Evitamos spam de errores en consola
             }
           }
         );
-      } catch (err) {
-        console.error('Error accediendo a la cámara:', err);
-        setError('Permiso denegado o cámara no disponible');
-      }
-    };
-
-    startScanner();
+      })
+      .catch((err) => {
+        console.error('❌ Error accediendo a cámara:', err);
+        toast.error('Error accediendo a cámara');
+      });
 
     return () => {
-      codeReader.current.reset();
+      codeReader.reset();
     };
-  }, []);
+  }, [onDetected]);
 
   return (
-    <div className="w-full flex flex-col items-center justify-center mt-4">
-      {error && <p className="text-red-500">{error}</p>}
-      <video ref={videoRef} className="rounded-lg w-full max-w-md shadow-md" />
-
-      {scannedCode && (
-        <div className="mt-6 w-full max-w-md p-4 border border-gray-300 rounded-md shadow-md bg-white">
-          <h3 className="font-semibold text-lg mb-2">Producto detectado:</h3>
-          <p><strong>Código:</strong> {scannedCode}</p>
-          {productInfo ? (
-            <>
-              <p><strong>Nombre:</strong> {productInfo.title || 'Sin nombre'}</p>
-              <p><strong>Marca:</strong> {productInfo.brand || 'Desconocida'}</p>
-              <p><strong>Descripción:</strong> {productInfo.description || 'N/A'}</p>
-              <button
-                onClick={() => onScan({ code: scannedCode, ...productInfo })}
-                className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Guardar producto escaneado
-              </button>
-            </>
-          ) : (
-            <p className="text-yellow-600 mt-2">Buscando información del producto...</p>
-          )}
-        </div>
-      )}
+    <div className="flex flex-col items-center gap-4">
+      <video
+        ref={videoRef}
+        className="rounded-lg border border-gray-300 w-full max-w-md"
+        autoPlay
+        muted
+        playsInline
+      />
+      <p className="text-gray-600 text-sm">
+        {scannedCode ? `Código detectado: ${scannedCode}` : 'Escaneando...'}
+      </p>
     </div>
   );
 };
