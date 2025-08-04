@@ -122,14 +122,30 @@ const ScanPage = () => {
         .catch(err => console.log('No hay streams activos'));
     }
     
-    navigate('/');
+    // Forzar recarga para asegurar que la cámara se detenga
+    window.location.href = '/';
   };
 
   const handleScanAnother = () => {
     setScannedCode('');
     processedCodesRef.current.clear();
+    
+    // Forzar detención de la cámara antes de recargar
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          stream.getTracks().forEach(track => {
+            track.stop();
+            console.log('Track detenido al escanear otro:', track.kind);
+          });
+        })
+        .catch(err => console.log('No hay streams activos'));
+    }
+    
     // Recargar la página para reiniciar el escáner completamente
-    window.location.reload();
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const handleClearHistory = () => {
@@ -159,7 +175,8 @@ const ScanPage = () => {
         .catch(err => console.log('No hay streams activos'));
     }
     
-    navigate(`/activos/${assetId}`);
+    // Forzar recarga para asegurar que la cámara se detenga
+    window.location.href = `/activos/${assetId}`;
   };
 
   // Obtener información del código actual escaneado
