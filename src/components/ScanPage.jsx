@@ -1,133 +1,65 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BarcodeScanner from '../components/BarcodeScanner';
-import { supabase } from '../supabaseClient';
 import toast from 'react-hot-toast';
-import { fetchProductDataFromUPC } from '../../api/upcItemDB';
 
 const ScanPage = () => {
   const navigate = useNavigate();
   const [scannedCode, setScannedCode] = useState('');
-  const [formData, setFormData] = useState({
-    name: '',
-    details: '',
-    category: '',
-    image_url: ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const isProcessingRef = useRef(false);
+  const [scannedCodes, setScannedCodes] = useState([]);
   const processedCodesRef = useRef(new Set());
 
   const handleScan = async (code) => {
-    console.log('🔍 Procesando código escaneado:', code);
+    console.log('🔍 Código escaneado:', code);
     
     // Evitar procesar el mismo código múltiples veces
-    if (processedCodesRef.current.has(code) || isProcessingRef.current) {
-      console.log('⚠️ Código ya procesado o procesando, ignorando...');
+    if (processedCodesRef.current.has(code)) {
+      console.log('⚠️ Código ya procesado, ignorando...');
       return;
     }
     
     processedCodesRef.current.add(code);
-    isProcessingRef.current = true;
     setScannedCode(code);
-    setSuccessMessage('');
-
-    try {
-      const product = await fetchProductDataFromUPC(code);
-
-      if (product) {
-        setFormData({
-          name: product.title || '',
-          details: product.description || '',
-          category: product.category || '',
-          image_url: product.image || '',
-        });
-        toast.success('✅ Producto encontrado en la base de datos');
-      } else {
-        toast.error('⚠️ Producto no encontrado. Rellena los datos manualmente.');
-        setFormData({ name: '', details: '', category: '', image_url: '' });
-      }
-    } catch (error) {
-      console.error('Error al buscar producto:', error);
-      toast.error('❌ Error al buscar el producto');
-      setFormData({ name: '', details: '', category: '', image_url: '' });
-    } finally {
-      isProcessingRef.current = false;
-    }
+    
+    // Agregar a la lista de códigos escaneados
+    const newCode = {
+      id: Date.now(),
+      code: code,
+      timestamp: new Date().toLocaleString('es-ES'),
+      type: code.length > 10 ? 'Código de barras' : 'Código QR'
+    };
+    
+    setScannedCodes(prev => [newCode, ...prev]);
+    toast.success(`✅ Código escaneado: ${code}`);
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSave = async () => {
-    if (!scannedCode) {
-      toast.error('No hay código escaneado');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('assets')
-        .insert({
-          name: formData.name,
-          details: formData.details,
-          category: formData.category,
-          image_url: formData.image_url,
-          codigo: scannedCode,
-          status: 'Activo'
-        });
-
-      if (error) throw error;
-
-      setSuccessMessage('Producto guardado exitosamente');
-      toast.success('✅ Producto guardado correctamente');
-      
-      // Limpiar formulario después de guardar
-      setTimeout(() => {
-        setScannedCode('');
-        setFormData({ name: '', details: '', category: '', image_url: '' });
-        setSuccessMessage('');
-        processedCodesRef.current.clear();
-      }, 2000);
-
-    } catch (error) {
-      console.error('Error al guardar:', error);
-      toast.error('❌ Error al guardar el producto');
-    } finally {
-      setLoading(false);
-    }
+  const copyToClipboard = (code) => {
+    navigator.clipboard.writeText(code);
+    toast.success('Código copiado al portapapeles');
   };
 
   const handleGoHome = () => {
-    // Limpiar el estado antes de navegar
     setScannedCode('');
-    setFormData({ name: '', details: '', category: '', image_url: '' });
-    setSuccessMessage('');
-    isProcessingRef.current = false;
     processedCodesRef.current.clear();
     navigate('/');
   };
 
   const handleScanAnother = () => {
     setScannedCode('');
-    setFormData({ name: '', details: '', category: '', image_url: '' });
-    isProcessingRef.current = false;
     processedCodesRef.current.clear();
     // Recargar la página para reiniciar el escáner completamente
     window.location.reload();
   };
 
+  const handleClearHistory = () => {
+    setScannedCodes([]);
+    toast.success('Historial limpiado');
+  };
+
   return (
-    <div className="p-4 max-w-xl mx-auto">
+    <div className="p-4 max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-semibold">Escanear código de barras</h1>
+        <h1 className="text-xl font-semibold">Escanear códigos QR</h1>
         <button
           onClick={handleGoHome}
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center gap-2"
@@ -137,65 +69,36 @@ const ScanPage = () => {
         </button>
       </div>
       
-      {!scannedCode && <BarcodeScanner onScan={handleScan} />}
+      {!scannedCode && (
+        <div className="space-y-4">
+          <BarcodeScanner onScan={handleScan} />
+          <p className="text-center text-gray-600">
+            Apunta la cámara hacia un código QR o código de barras
+          </p>
+        </div>
+      )}
 
       {scannedCode && (
         <div className="space-y-4">
+          {/* Código actual escaneado */}
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-            <strong>Código escaneado:</strong> {scannedCode}
-          </div>
-
-          {successMessage && (
-            <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
-              {successMessage}
+            <div className="flex justify-between items-center">
+              <div>
+                <strong>Código escaneado:</strong> {scannedCode}
+              </div>
+              <button
+                onClick={() => copyToClipboard(scannedCode)}
+                className="bg-green-600 text-white px-2 py-1 rounded text-sm hover:bg-green-700"
+              >
+                Copiar
+              </button>
             </div>
-          )}
-
-          <div className="space-y-3">
-            <input
-              type="text"
-              name="name"
-              placeholder="Nombre del producto"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
-            />
-            <textarea
-              name="details"
-              placeholder="Descripción del producto"
-              value={formData.details}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded h-20 resize-none"
-              rows="3"
-            />
-            <input
-              type="text"
-              name="category"
-              placeholder="Categoría"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
-            />
-            <input
-              type="text"
-              name="image_url"
-              placeholder="URL de la imagen"
-              value={formData.image_url}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded"
-            />
           </div>
-          
+
+          {/* Botones de acción */}
           <div className="flex gap-2">
             <button
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-              onClick={handleSave}
-              disabled={loading}
-            >
-              {loading ? 'Guardando...' : 'Guardar producto escaneado'}
-            </button>
-            <button
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               onClick={handleScanAnother}
             >
               Escanear otro código
@@ -206,6 +109,43 @@ const ScanPage = () => {
             >
               Volver al inicio
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Historial de códigos escaneados */}
+      {scannedCodes.length > 0 && (
+        <div className="mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Historial de códigos escaneados</h2>
+            <button
+              onClick={handleClearHistory}
+              className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700"
+            >
+              Limpiar historial
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            {scannedCodes.map((item) => (
+              <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm text-gray-500">{item.type}</span>
+                      <span className="text-xs text-gray-400">{item.timestamp}</span>
+                    </div>
+                    <div className="font-mono text-lg break-all">{item.code}</div>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(item.code)}
+                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 ml-2"
+                  >
+                    Copiar
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
