@@ -10,6 +10,7 @@ const BarcodeScanner = ({ onScan }) => {
   const [isActive, setIsActive] = useState(false);
   const [scannedCode, setScannedCode] = useState(null);
   const hasScannedRef = useRef(false);
+  const mountedRef = useRef(true);
 
   const stopCamera = () => {
     console.log('🛑 Deteniendo cámara...');
@@ -37,6 +38,25 @@ const BarcodeScanner = ({ onScan }) => {
     }
     
     setIsActive(false);
+  };
+
+  // Función para forzar la detención de la cámara
+  const forceStopCamera = () => {
+    console.log('🛑 Forzando detención de cámara...');
+    
+    // Detener todos los tracks de media
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          stream.getTracks().forEach(track => {
+            track.stop();
+            console.log('Track forzado detenido:', track.kind);
+          });
+        })
+        .catch(err => console.log('No hay streams activos para detener'));
+    }
+    
+    stopCamera();
   };
 
   useEffect(() => {
@@ -99,9 +119,18 @@ const BarcodeScanner = ({ onScan }) => {
 
     return () => {
       mounted = false;
-      stopCamera();
+      mountedRef.current = false;
+      forceStopCamera();
     };
   }, []); // Sin dependencias para evitar re-renders
+
+  // Cleanup adicional cuando el componente se desmonta
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      forceStopCamera();
+    };
+  }, []);
 
   const resetScanner = () => {
     console.log('🔄 Reiniciando escáner...');
@@ -109,7 +138,10 @@ const BarcodeScanner = ({ onScan }) => {
     setScannedCode(null);
     setIsActive(false);
     
-    // Forzar re-montaje del componente
+    // Forzar detención antes de reiniciar
+    forceStopCamera();
+    
+    // Recargar la página para un reinicio completo
     setTimeout(() => {
       window.location.reload();
     }, 100);

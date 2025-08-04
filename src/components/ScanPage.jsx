@@ -109,6 +109,19 @@ const ScanPage = () => {
   const handleGoHome = () => {
     setScannedCode('');
     processedCodesRef.current.clear();
+    
+    // Forzar detención de la cámara antes de navegar
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          stream.getTracks().forEach(track => {
+            track.stop();
+            console.log('Track detenido al navegar:', track.kind);
+          });
+        })
+        .catch(err => console.log('No hay streams activos'));
+    }
+    
     navigate('/');
   };
 
@@ -133,6 +146,19 @@ const ScanPage = () => {
     // Limpiar el estado antes de navegar
     setScannedCode('');
     processedCodesRef.current.clear();
+    
+    // Forzar detención de la cámara antes de navegar
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          stream.getTracks().forEach(track => {
+            track.stop();
+            console.log('Track detenido al ver producto:', track.kind);
+          });
+        })
+        .catch(err => console.log('No hay streams activos'));
+    }
+    
     navigate(`/activos/${assetId}`);
   };
 
