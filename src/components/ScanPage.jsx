@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BarcodeScanner from '../components/BarcodeScanner';
 import { supabase } from '../supabaseClient';
@@ -16,18 +16,20 @@ const ScanPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const isProcessingRef = useRef(false);
+  const processedCodesRef = useRef(new Set());
 
-  const handleScan = useCallback(async (code) => {
+  const handleScan = async (code) => {
     console.log('🔍 Procesando código escaneado:', code);
     
     // Evitar procesar el mismo código múltiples veces
-    if (scannedCode === code || isProcessing) {
+    if (processedCodesRef.current.has(code) || isProcessingRef.current) {
       console.log('⚠️ Código ya procesado o procesando, ignorando...');
       return;
     }
     
-    setIsProcessing(true);
+    processedCodesRef.current.add(code);
+    isProcessingRef.current = true;
     setScannedCode(code);
     setSuccessMessage('');
 
@@ -51,9 +53,9 @@ const ScanPage = () => {
       toast.error('❌ Error al buscar el producto');
       setFormData({ name: '', details: '', category: '', image_url: '' });
     } finally {
-      setIsProcessing(false);
+      isProcessingRef.current = false;
     }
-  }, [scannedCode, isProcessing]);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -92,6 +94,7 @@ const ScanPage = () => {
         setScannedCode('');
         setFormData({ name: '', details: '', category: '', image_url: '' });
         setSuccessMessage('');
+        processedCodesRef.current.clear();
       }, 2000);
 
     } catch (error) {
@@ -107,8 +110,18 @@ const ScanPage = () => {
     setScannedCode('');
     setFormData({ name: '', details: '', category: '', image_url: '' });
     setSuccessMessage('');
-    setIsProcessing(false);
+    isProcessingRef.current = false;
+    processedCodesRef.current.clear();
     navigate('/');
+  };
+
+  const handleScanAnother = () => {
+    setScannedCode('');
+    setFormData({ name: '', details: '', category: '', image_url: '' });
+    isProcessingRef.current = false;
+    processedCodesRef.current.clear();
+    // Recargar la página para reiniciar el escáner completamente
+    window.location.reload();
   };
 
   return (
@@ -183,11 +196,7 @@ const ScanPage = () => {
             </button>
             <button
               className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-              onClick={() => {
-                setScannedCode('');
-                setFormData({ name: '', details: '', category: '', image_url: '' });
-                setIsProcessing(false);
-              }}
+              onClick={handleScanAnother}
             >
               Escanear otro código
             </button>

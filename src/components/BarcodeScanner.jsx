@@ -1,5 +1,5 @@
 // BarcodeScanner.jsx
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import toast from 'react-hot-toast';
 
@@ -7,11 +7,11 @@ const BarcodeScanner = ({ onScan }) => {
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
   const streamRef = useRef(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  const [isActive, setIsActive] = useState(false);
   const [scannedCode, setScannedCode] = useState(null);
+  const hasScannedRef = useRef(false);
 
-  const stopCamera = useCallback(() => {
+  const stopCamera = () => {
     console.log('🛑 Deteniendo cámara...');
     
     if (streamRef.current) {
@@ -36,88 +36,84 @@ const BarcodeScanner = ({ onScan }) => {
       codeReaderRef.current = null;
     }
     
-    setIsScanning(false);
-  }, []);
-
-  const handleScan = useCallback((code) => {
-    if (scannedCode === code) {
-      console.log('⚠️ Código ya procesado, ignorando...');
-      return;
-    }
-    
-    console.log('✅ Código detectado:', code);
-    setScannedCode(code);
-    setIsScanning(false);
-    
-    // Detener cámara inmediatamente
-    stopCamera();
-    
-    // Notificar al componente padre
-    if (onScan && typeof onScan === 'function') {
-      onScan(code);
-    }
-  }, [scannedCode, onScan, stopCamera]);
-
-  const startCamera = useCallback(async () => {
-    if (isInitialized || isScanning) {
-      console.log('⚠️ Cámara ya inicializada o escaneando...');
-      return;
-    }
-
-    try {
-      console.log('📸 Iniciando cámara para escanear...');
-      setIsScanning(true);
-      setIsInitialized(true);
-      
-      const codeReader = new BrowserMultiFormatReader();
-      codeReaderRef.current = codeReader;
-
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      });
-      
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-
-      codeReader.decodeFromVideoDevice(null, videoRef.current, (result, error) => {
-        if (result && !scannedCode) {
-          const code = result.getText();
-          handleScan(code);
-        }
-      });
-      
-    } catch (error) {
-      console.error('❌ Error al iniciar la cámara:', error);
-      toast.error('No se pudo acceder a la cámara');
-      setIsScanning(false);
-      setIsInitialized(false);
-    }
-  }, [isInitialized, isScanning, scannedCode, handleScan]);
+    setIsActive(false);
+  };
 
   useEffect(() => {
-    if (!isInitialized && !scannedCode) {
-      startCamera();
-    }
+    let mounted = true;
+
+    const startCamera = async () => {
+      if (!mounted || isActive || hasScannedRef.current) return;
+
+      try {
+        console.log('📸 Iniciando cámara para escanear...');
+        setIsActive(true);
+        
+        const codeReader = new BrowserMultiFormatReader();
+        codeReaderRef.current = codeReader;
+
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
+        
+        if (!mounted) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        
+        streamRef.current = stream;
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+
+        codeReader.decodeFromVideoDevice(null, videoRef.current, (result, error) => {
+          if (result && mounted && !hasScannedRef.current) {
+            const code = result.getText();
+            console.log('✅ Código detectado:', code);
+            
+            hasScannedRef.current = true;
+            setScannedCode(code);
+            setIsActive(false);
+            
+            // Detener cámara inmediatamente
+            stopCamera();
+            
+            // Notificar al componente padre
+            if (onScan && typeof onScan === 'function') {
+              onScan(code);
+            }
+          }
+        });
+        
+      } catch (error) {
+        console.error('❌ Error al iniciar la cámara:', error);
+        if (mounted) {
+          toast.error('No se pudo acceder a la cámara');
+          setIsActive(false);
+        }
+      }
+    };
+
+    startCamera();
 
     return () => {
+      mounted = false;
       stopCamera();
     };
-  }, [isInitialized, scannedCode, startCamera, stopCamera]);
+  }, []); // Sin dependencias para evitar re-renders
 
-  const resetScanner = useCallback(() => {
+  const resetScanner = () => {
     console.log('🔄 Reiniciando escáner...');
+    hasScannedRef.current = false;
     setScannedCode(null);
-    setIsInitialized(false);
-    setIsScanning(false);
+    setIsActive(false);
     
-    // Limpiar y reiniciar después de un breve delay
+    // Forzar re-montaje del componente
     setTimeout(() => {
-      startCamera();
-    }, 500);
-  }, [startCamera]);
+      window.location.reload();
+    }, 100);
+  };
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -131,7 +127,7 @@ const BarcodeScanner = ({ onScan }) => {
         />
         <div className="absolute top-2 right-2">
           <div className="bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-            {isScanning ? 'Cámara activa' : 'Cámara inactiva'}
+            {isActive ? 'Cámara activa' : 'Cámara inactiva'}
           </div>
         </div>
       </div>
