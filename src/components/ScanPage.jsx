@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BarcodeScanner from '../components/BarcodeScanner';
 import { supabase } from '../supabaseClient';
@@ -12,19 +12,22 @@ const ScanPage = () => {
     name: '',
     details: '',
     category: '',
-    image_url: '',
+    image_url: ''
   });
+  const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleScan = async (code) => {
+  const handleScan = useCallback(async (code) => {
     console.log('🔍 Procesando código escaneado:', code);
     
     // Evitar procesar el mismo código múltiples veces
-    if (scannedCode === code) {
-      console.log('⚠️ Código ya procesado, ignorando...');
+    if (scannedCode === code || isProcessing) {
+      console.log('⚠️ Código ya procesado o procesando, ignorando...');
       return;
     }
     
+    setIsProcessing(true);
     setScannedCode(code);
     setSuccessMessage('');
 
@@ -47,33 +50,55 @@ const ScanPage = () => {
       console.error('Error al buscar producto:', error);
       toast.error('❌ Error al buscar el producto');
       setFormData({ name: '', details: '', category: '', image_url: '' });
+    } finally {
+      setIsProcessing(false);
     }
-  };
+  }, [scannedCode, isProcessing]);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSave = async () => {
-    const { name, details, category, image_url } = formData;
+    if (!scannedCode) {
+      toast.error('No hay código escaneado');
+      return;
+    }
 
-    const { error } = await supabase.from('assets').insert([
-      {
-        codigo: scannedCode,
-        name,
-        details,
-        category,
-        image_url,
-      },
-    ]);
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('assets')
+        .insert({
+          name: formData.name,
+          details: formData.details,
+          category: formData.category,
+          image_url: formData.image_url,
+          codigo: scannedCode,
+          status: 'Activo'
+        });
 
-    if (error) {
-      console.error('Error guardando en Supabase:', error.message);
-      toast.error('❌ Error al guardar el producto.');
-    } else {
+      if (error) throw error;
+
+      setSuccessMessage('Producto guardado exitosamente');
       toast.success('✅ Producto guardado correctamente');
-      setScannedCode('');
-      setFormData({ name: '', details: '', category: '', image_url: '' });
+      
+      // Limpiar formulario después de guardar
+      setTimeout(() => {
+        setScannedCode('');
+        setFormData({ name: '', details: '', category: '', image_url: '' });
+        setSuccessMessage('');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      toast.error('❌ Error al guardar el producto');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,6 +107,7 @@ const ScanPage = () => {
     setScannedCode('');
     setFormData({ name: '', details: '', category: '', image_url: '' });
     setSuccessMessage('');
+    setIsProcessing(false);
     navigate('/');
   };
 
@@ -97,72 +123,82 @@ const ScanPage = () => {
           Cerrar cámara
         </button>
       </div>
+      
       {!scannedCode && <BarcodeScanner onScan={handleScan} />}
 
       {scannedCode && (
-        <div className="bg-white rounded p-4 shadow mt-4">
-          <p className="text-sm mb-2">Código escaneado:</p>
-          <input
-            className="border px-2 py-1 w-full mb-2"
-            value={scannedCode}
-            readOnly
-          />
-          <input
-            className="border px-2 py-1 w-full mb-2"
-            name="name"
-            placeholder="Nombre del producto"
-            value={formData.name}
-            onChange={handleChange}
-          />
-          <textarea
-            className="border px-2 py-1 w-full mb-2"
-            name="details"
-            placeholder="Descripción"
-            value={formData.details}
-            onChange={handleChange}
-          />
-          <input
-            className="border px-2 py-1 w-full mb-2"
-            name="category"
-            placeholder="Categoría"
-            value={formData.category}
-            onChange={handleChange}
-          />
-          <input
-            className="border px-2 py-1 w-full mb-2"
-            name="image_url"
-            placeholder="URL de imagen"
-            value={formData.image_url}
-            onChange={handleChange}
-          />
-                     <div className="flex gap-2">
-             <button
-               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-               onClick={handleSave}
-             >
-               Guardar producto escaneado
-             </button>
-             <button
-               className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-               onClick={() => {
-                 setScannedCode('');
-                 setFormData({ name: '', details: '', category: '', image_url: '' });
-               }}
-             >
-               Escanear otro código
-             </button>
-             <button
-               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-               onClick={handleGoHome}
-             >
-               Volver al inicio
-             </button>
-           </div>
-        </div>
-      )}
+        <div className="space-y-4">
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+            <strong>Código escaneado:</strong> {scannedCode}
+          </div>
 
-      {successMessage && (
-        <p className="mt-4 text-green-600 font-medium">{successMessage}</p>
+          {successMessage && (
+            <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
+              {successMessage}
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <input
+              type="text"
+              name="name"
+              placeholder="Nombre del producto"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded"
+            />
+            <textarea
+              name="details"
+              placeholder="Descripción del producto"
+              value={formData.details}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded h-20 resize-none"
+              rows="3"
+            />
+            <input
+              type="text"
+              name="category"
+              placeholder="Categoría"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded"
+            />
+            <input
+              type="text"
+              name="image_url"
+              placeholder="URL de la imagen"
+              value={formData.image_url}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded"
+            />
+          </div>
+          
+          <div className="flex gap-2">
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+              onClick={handleSave}
+              disabled={loading}
+            >
+              {loading ? 'Guardando...' : 'Guardar producto escaneado'}
+            </button>
+            <button
+              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+              onClick={() => {
+                setScannedCode('');
+                setFormData({ name: '', details: '', category: '', image_url: '' });
+                setIsProcessing(false);
+              }}
+            >
+              Escanear otro código
+            </button>
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              onClick={handleGoHome}
+            >
+              Volver al inicio
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

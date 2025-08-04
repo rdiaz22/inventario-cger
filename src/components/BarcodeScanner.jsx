@@ -1,5 +1,5 @@
 // BarcodeScanner.jsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import toast from 'react-hot-toast';
 
@@ -7,10 +7,11 @@ const BarcodeScanner = ({ onScan }) => {
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
   const streamRef = useRef(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [hasScanned, setHasScanned] = useState(false);
+  const [scannedCode, setScannedCode] = useState(null);
 
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     console.log('🛑 Deteniendo cámara...');
     
     if (streamRef.current) {
@@ -36,14 +37,37 @@ const BarcodeScanner = ({ onScan }) => {
     }
     
     setIsScanning(false);
-  };
+  }, []);
 
-  const startCamera = async () => {
-    if (isScanning || hasScanned) return;
+  const handleScan = useCallback((code) => {
+    if (scannedCode === code) {
+      console.log('⚠️ Código ya procesado, ignorando...');
+      return;
+    }
+    
+    console.log('✅ Código detectado:', code);
+    setScannedCode(code);
+    setIsScanning(false);
+    
+    // Detener cámara inmediatamente
+    stopCamera();
+    
+    // Notificar al componente padre
+    if (onScan && typeof onScan === 'function') {
+      onScan(code);
+    }
+  }, [scannedCode, onScan, stopCamera]);
+
+  const startCamera = useCallback(async () => {
+    if (isInitialized || isScanning) {
+      console.log('⚠️ Cámara ya inicializada o escaneando...');
+      return;
+    }
 
     try {
       console.log('📸 Iniciando cámara para escanear...');
       setIsScanning(true);
+      setIsInitialized(true);
       
       const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
@@ -59,19 +83,9 @@ const BarcodeScanner = ({ onScan }) => {
       }
 
       codeReader.decodeFromVideoDevice(null, videoRef.current, (result, error) => {
-        if (result && !hasScanned) {
+        if (result && !scannedCode) {
           const code = result.getText();
-          console.log('✅ Código detectado:', code);
-          
-          setHasScanned(true);
-          toast.success(`Código: ${code}`);
-
-          if (onScan && typeof onScan === 'function') {
-            onScan(code);
-          }
-
-          // Detener cámara inmediatamente
-          stopCamera();
+          handleScan(code);
         }
       });
       
@@ -79,29 +93,31 @@ const BarcodeScanner = ({ onScan }) => {
       console.error('❌ Error al iniciar la cámara:', error);
       toast.error('No se pudo acceder a la cámara');
       setIsScanning(false);
+      setIsInitialized(false);
     }
-  };
+  }, [isInitialized, isScanning, scannedCode, handleScan]);
 
   useEffect(() => {
-    if (!hasScanned) {
+    if (!isInitialized && !scannedCode) {
       startCamera();
     }
 
     return () => {
       stopCamera();
     };
-  }, []); // Solo se ejecuta una vez al montar
+  }, [isInitialized, scannedCode, startCamera, stopCamera]);
 
-  const resetScanner = () => {
+  const resetScanner = useCallback(() => {
     console.log('🔄 Reiniciando escáner...');
-    setHasScanned(false);
+    setScannedCode(null);
+    setIsInitialized(false);
     setIsScanning(false);
-    // El useEffect no se ejecutará de nuevo porque las dependencias están vacías
-    // Necesitamos forzar un re-render
+    
+    // Limpiar y reiniciar después de un breve delay
     setTimeout(() => {
       startCamera();
-    }, 100);
-  };
+    }, 500);
+  }, [startCamera]);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -119,10 +135,12 @@ const BarcodeScanner = ({ onScan }) => {
           </div>
         </div>
       </div>
+      
       <p className="text-gray-600 text-sm">
-        {hasScanned ? 'Código detectado' : 'Escaneando...'}
+        {scannedCode ? `Código detectado: ${scannedCode}` : 'Escaneando...'}
       </p>
-      {hasScanned && (
+      
+      {scannedCode && (
         <button
           onClick={resetScanner}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
