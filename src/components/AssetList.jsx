@@ -12,11 +12,26 @@ const AssetList = () => {
   const [isLoadingAsset, setIsLoadingAsset] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetchAssets();
     fetchCategories();
   }, []);
+
+  // Cerrar dropdown cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isDropdownOpen && !event.target.closest('.dropdown-container')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   const fetchAssets = async () => {
     // Cargar activos normales
@@ -237,30 +252,84 @@ const AssetList = () => {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      <div className="mb-4 flex flex-wrap gap-2">
-        <button
-          onClick={() => setSelectedCategory(null)}
-          className={`px-3 py-1 rounded-full border transition-all duration-150 ease-in-out hover:shadow-md hover:scale-105 text-sm font-medium ${
-            selectedCategory === null
-              ? "bg-gray-800 text-white border-gray-900"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          Todos
-        </button>
-        {categories.map((cat) => (
+      {/* Filtros de categoría - Responsive */}
+      <div className="mb-4">
+        {/* Desktop: Botones horizontales */}
+        <div className="hidden md:flex flex-wrap gap-2">
           <button
-            key={cat.id}
-            onClick={() => handleCategoryClick(cat.name)}
+            onClick={() => setSelectedCategory(null)}
             className={`px-3 py-1 rounded-full border transition-all duration-150 ease-in-out hover:shadow-md hover:scale-105 text-sm font-medium ${
-              selectedCategory === cat.name
-                ? "bg-blue-600 text-white border-blue-700"
+              selectedCategory === null
+                ? "bg-gray-800 text-white border-gray-900"
                 : "bg-gray-200 text-gray-700"
             }`}
           >
-            {cat.name}
+            Todos
           </button>
-        ))}
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => handleCategoryClick(cat.name)}
+              className={`px-3 py-1 rounded-full border transition-all duration-150 ease-in-out hover:shadow-md hover:scale-105 text-sm font-medium ${
+                selectedCategory === cat.name
+                  ? "bg-blue-600 text-white border-blue-700"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Mobile: Dropdown */}
+        <div className="md:hidden relative dropdown-container">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm flex justify-between items-center hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <span className="text-sm font-medium">
+              {selectedCategory ? selectedCategory : "Todas las categorías"}
+            </span>
+            <svg
+              className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {isDropdownOpen && (
+            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <button
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setIsDropdownOpen(false);
+                }}
+                className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${
+                  selectedCategory === null ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                }`}
+              >
+                Todas las categorías
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    handleCategoryClick(cat.name);
+                    setIsDropdownOpen(false);
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${
+                    selectedCategory === cat.name ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
