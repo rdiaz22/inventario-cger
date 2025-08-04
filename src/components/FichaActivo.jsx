@@ -1,11 +1,12 @@
 // src/pages/FichaActivo.jsx
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import QRCode from "react-qr-code";
 
 const FichaActivo = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [activo, setActivo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mostrarEtiqueta, setMostrarEtiqueta] = useState(false);
@@ -113,7 +114,16 @@ const FichaActivo = () => {
     <div className="min-h-screen bg-white p-6 flex flex-col items-center">
       {!mostrarEtiqueta && (
         <>
-          <h1 className="text-2xl font-bold mb-4">Ficha del Activo</h1>
+          <div className="flex justify-between items-center w-full max-w-xl mb-4">
+            <h1 className="text-2xl font-bold">Ficha del Activo</h1>
+            <button
+              onClick={() => navigate('/')}
+              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 flex items-center gap-2"
+            >
+              <span>←</span>
+              Volver al inicio
+            </button>
+          </div>
           <div className="bg-gray-100 rounded-xl shadow-md w-full max-w-xl p-4">
             <img
               src={activo.image_url}

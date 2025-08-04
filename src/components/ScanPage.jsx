@@ -130,6 +130,9 @@ const ScanPage = () => {
   };
 
   const viewProduct = (assetId) => {
+    // Limpiar el estado antes de navegar
+    setScannedCode('');
+    processedCodesRef.current.clear();
     navigate(`/activos/${assetId}`);
   };
 
