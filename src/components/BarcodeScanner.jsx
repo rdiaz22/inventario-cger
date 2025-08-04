@@ -7,14 +7,12 @@ const BarcodeScanner = ({ onScan }) => {
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
   const streamRef = useRef(null);
-  const [scannedCode, setScannedCode] = useState(null);
-  const [isScanning, setIsScanning] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [hasScanned, setHasScanned] = useState(false);
 
   const stopCamera = () => {
     console.log('🛑 Deteniendo cámara...');
     
-    // Detener el stream de la cámara
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => {
         track.stop();
@@ -23,28 +21,29 @@ const BarcodeScanner = ({ onScan }) => {
       streamRef.current = null;
     }
 
-    // Limpiar el video
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
 
-    // Resetear el codeReader de forma segura
     if (codeReaderRef.current) {
       try {
         codeReaderRef.current.reset();
         console.log('CodeReader reseteado correctamente');
       } catch (error) {
-        console.log('CodeReader ya estaba detenido o no es válido');
+        console.log('CodeReader ya estaba detenido:', error.message);
       }
       codeReaderRef.current = null;
     }
+    
+    setIsScanning(false);
   };
 
   const startCamera = async () => {
-    if (isInitialized) return;
+    if (isScanning || hasScanned) return;
 
     try {
       console.log('📸 Iniciando cámara para escanear...');
+      setIsScanning(true);
       
       const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
@@ -59,54 +58,49 @@ const BarcodeScanner = ({ onScan }) => {
         videoRef.current.srcObject = stream;
       }
 
-      // Configurar el callback de detección
       codeReader.decodeFromVideoDevice(null, videoRef.current, (result, error) => {
-        if (result && isScanning) {
+        if (result && !hasScanned) {
           const code = result.getText();
           console.log('✅ Código detectado:', code);
           
-          // Evitar múltiples detecciones del mismo código
-          if (code !== scannedCode) {
-            setScannedCode(code);
-            setIsScanning(false);
-            toast.success(`Código: ${code}`);
+          setHasScanned(true);
+          toast.success(`Código: ${code}`);
 
-            // Llamar a la función onScan con el código escaneado
-            if (onScan && typeof onScan === 'function') {
-              onScan(code);
-            }
-
-            // Detener cámara después de detectar
-            setTimeout(() => {
-              stopCamera();
-            }, 100);
+          if (onScan && typeof onScan === 'function') {
+            onScan(code);
           }
+
+          // Detener cámara inmediatamente
+          stopCamera();
         }
       });
-
-      setIsInitialized(true);
       
     } catch (error) {
       console.error('❌ Error al iniciar la cámara:', error);
       toast.error('No se pudo acceder a la cámara');
+      setIsScanning(false);
     }
   };
 
   useEffect(() => {
-    if (isScanning && !isInitialized) {
+    if (!hasScanned) {
       startCamera();
     }
 
     return () => {
       stopCamera();
     };
-  }, [isScanning, isInitialized]);
+  }, []); // Solo se ejecuta una vez al montar
 
   const resetScanner = () => {
     console.log('🔄 Reiniciando escáner...');
-    setScannedCode(null);
-    setIsScanning(true);
-    setIsInitialized(false);
+    setHasScanned(false);
+    setIsScanning(false);
+    // El useEffect no se ejecutará de nuevo porque las dependencias están vacías
+    // Necesitamos forzar un re-render
+    setTimeout(() => {
+      startCamera();
+    }, 100);
   };
 
   return (
@@ -121,14 +115,14 @@ const BarcodeScanner = ({ onScan }) => {
         />
         <div className="absolute top-2 right-2">
           <div className="bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-            {isScanning ? 'Cámara activa' : 'Cámara detenida'}
+            {isScanning ? 'Cámara activa' : 'Cámara inactiva'}
           </div>
         </div>
       </div>
       <p className="text-gray-600 text-sm">
-        {scannedCode ? `Código detectado: ${scannedCode}` : 'Escaneando...'}
+        {hasScanned ? 'Código detectado' : 'Escaneando...'}
       </p>
-      {scannedCode && (
+      {hasScanned && (
         <button
           onClick={resetScanner}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

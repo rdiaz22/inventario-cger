@@ -78,6 +78,10 @@ const ScanPage = () => {
   };
 
   const handleGoHome = () => {
+    // Limpiar el estado antes de navegar
+    setScannedCode('');
+    setFormData({ name: '', details: '', category: '', image_url: '' });
+    setSuccessMessage('');
     navigate('/');
   };
 
@@ -140,7 +144,10 @@ const ScanPage = () => {
              </button>
              <button
                className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-               onClick={() => setScannedCode('')}
+               onClick={() => {
+                 setScannedCode('');
+                 setFormData({ name: '', details: '', category: '', image_url: '' });
+               }}
              >
                Escanear otro código
              </button>

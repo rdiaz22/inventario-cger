@@ -1,8 +1,14 @@
 export async function fetchProductDataFromUPC(upc) {
-  const URL = `/api/fetch-upc?upc=${upc}`;
+  // Usar la API directamente en lugar del proxy local
+  const URL = `https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`;
 
   try {
-    const response = await fetch(URL);
+    const response = await fetch(URL, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
     
     if (response.status === 429) {
       console.warn('⚠️ Demasiadas solicitudes a la API. Esperando...');

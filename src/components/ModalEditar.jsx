@@ -191,9 +191,24 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
       }
     } else {
       // Actualizar activo normal
+      const updateData = {
+        name: formData.name,
+        brand: formData.brand,
+        model: formData.model,
+        details: formData.details,
+        serial_number: formData.serial_number,
+        assigned_to: formData.assigned_to,
+        category: formData.category,
+        fecha_compra: formData.fecha_compra,
+        fecha_garantia: formData.fecha_garantia,
+        precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null,
+        status: formData.status,
+        image_url: imageUrl
+      };
+
       const { error } = await supabase
         .from("assets")
-        .update({ ...formData, image_url: imageUrl })
+        .update(updateData)
         .eq("id", asset.id);
 
       if (error) {
@@ -221,6 +236,14 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           value={formData.name || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
+        />
+        <textarea
+          name="details"
+          placeholder="Descripción del producto"
+          value={formData.details || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3 h-20 resize-none"
+          rows="3"
         />
         <input
           type="text"
