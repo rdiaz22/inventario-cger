@@ -162,15 +162,24 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
 
       console.log("EPI encontrado:", existingEpi);
 
-      // Preparar datos de actualización con solo los campos que existen
+      // Preparar datos de actualización con todos los campos disponibles
       const updateData = {
         name: formData.name || existingEpi.name,
+        category: formData.category || 'EPI',
+        brand: formData.brand || null,
         model: formData.model || null,
+        serial_number: formData.serial_number || null,
+        details: formData.details || null,
+        assigned_to: formData.assigned_to || null,
+        status: formData.status || 'Activo',
         supplier: formData.supplier || null,
         image_url: imageUrl || existingEpi.image_url,
-        codigo: formData.codigo || asset.codigo || null
+        codigo: formData.codigo || asset.codigo || null,
+        fecha_compra: formData.fecha_compra || null,
+        fecha_garantia: formData.fecha_garantia || null,
+        precio_compra: formData.precio_compra && formData.precio_compra !== '' ? parseFloat(formData.precio_compra) : null
       };
-
+      
       console.log("Datos de actualización EPI:", updateData);
 
       const { error: epiError } = await supabase
