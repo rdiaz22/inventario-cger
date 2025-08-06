@@ -109,24 +109,13 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
         
         console.log("Guardando EPI con código:", codigo); // Debug
         
-        // Guardar en epi_assets con todos los campos necesarios
+        // Guardar en epi_assets con solo los campos que existen en la tabla
         const epiDataToInsert = {
           name: form.name,
-          brand: form.brand,
           model: form.model,
-          details: form.details,
-          serial_number: form.serial_number,
-          assigned_to: form.assigned_to,
           supplier: form.supplier,
-          fabricante: form.fabricante,
-          certificacion: form.certificacion,
           image_url: imageUrl,
-          codigo,
-          status: form.status,
-          // Campos de fechas y precio
-          fecha_compra: form.fecha_compra || null,
-          fecha_garantia: form.fecha_garantia || null,
-          precio_compra: form.precio_compra ? parseFloat(form.precio_compra) : null
+          codigo
         };
         
         console.log("Datos EPI a insertar:", epiDataToInsert); // Debug

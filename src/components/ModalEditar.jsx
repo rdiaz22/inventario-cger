@@ -160,34 +160,38 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         }
       }
 
-      // Actualizar EPI principal con todos los campos
+      // Actualizar EPI principal solo con los campos que existen en la tabla
       const epiUpdateData = {
         name: formData.name,
-        brand: formData.brand,
         model: formData.model,
-        details: formData.details,
-        serial_number: formData.serial_number,
-        assigned_to: formData.assigned_to,
         supplier: formData.supplier,
-        fabricante: formData.fabricante,
-        certificacion: formData.certificacion,
-        status: formData.status,
         image_url: imageUrl,
-        // Campos de fechas y precio
-        fecha_compra: formData.fecha_compra || null,
-        fecha_garantia: formData.fecha_garantia || null,
-        precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null
+        codigo: formData.codigo || asset.codigo
       };
 
-      console.log("Actualizando EPI con ID:", epiId, "Datos:", epiUpdateData);
+      // Filtrar campos que no sean null o undefined
+      const filteredUpdateData = Object.fromEntries(
+        Object.entries(epiUpdateData).filter(([key, value]) => 
+          value !== null && value !== undefined && value !== ''
+        )
+      );
+
+      console.log("Actualizando EPI con ID:", epiId, "Datos filtrados:", filteredUpdateData);
 
       const { error: epiError } = await supabase
         .from("epi_assets")
-        .update(epiUpdateData)
+        .update(filteredUpdateData)
         .eq("id", epiId);
 
       if (epiError) {
         console.error("Error al actualizar EPI:", epiError);
+        console.error("Detalles del error:", {
+          message: epiError.message,
+          details: epiError.details,
+          hint: epiError.hint,
+          code: epiError.code
+        });
+        console.error("Datos que se intentaron enviar:", epiUpdateData);
         setLoading(false);
         return;
       }
@@ -265,24 +269,6 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           className="w-full border px-3 py-2 rounded mb-3"
           autoComplete="off"
         />
-        <textarea
-          name="details"
-          placeholder="Descripción del producto"
-          value={formData.details || ""}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded mb-3 h-20 resize-none"
-          rows="3"
-          autoComplete="off"
-        />
-        <input
-          type="text"
-          name="brand"
-          placeholder="Marca"
-          value={formData.brand || ""}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded mb-3"
-          autoComplete="off"
-        />
         <input
           type="text"
           name="model"
@@ -294,59 +280,115 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         />
         <input
           type="text"
-          name="serial_number"
-          placeholder="Número de serie"
-          value={formData.serial_number || ""}
+          name="codigo"
+          placeholder="Código"
+          value={formData.codigo || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
           autoComplete="off"
         />
-        <input
-          type="date"
-          name="fecha_compra"
-          placeholder="Fecha de Compra"
-          value={formData.fecha_compra?.split('T')[0] || ""}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded mb-3"
-          autoComplete="off"
-        />
-        <input
-          type="date"
-          name="fecha_garantia"
-          placeholder="Fecha de Garantía"
-          value={formData.fecha_garantia?.split('T')[0] || ""}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded mb-3"
-          autoComplete="off"
-        />
-        <input
-          type="number"
-          step="0.01"
-          name="precio_compra"
-          placeholder="Precio de Compra (€)"
-          value={formData.precio_compra || ""}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded mb-3"
-          autoComplete="off"
-        />
-        <input
-          type="text"
-          name="category"
-          placeholder="Categoría"
-          value={formData.category || ""}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded mb-3"
-          autoComplete="off"
-        />
-        <input
-          type="text"
-          name="status"
-          placeholder="Estado"
-          value={formData.status || ""}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded mb-3"
-          autoComplete="off"
-        />
+
+        {/* Campos específicos para EPIs */}
+        {isEPI && (
+          <input
+            type="text"
+            name="supplier"
+            placeholder="Proveedor"
+            value={formData.supplier || ""}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded mb-3"
+            autoComplete="off"
+          />
+        )}
+
+        {/* Campos para activos normales */}
+        {!isEPI && (
+          <>
+            <textarea
+              name="details"
+              placeholder="Descripción del producto"
+              value={formData.details || ""}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded mb-3 h-20 resize-none"
+              rows="3"
+              autoComplete="off"
+            />
+            <input
+              type="text"
+              name="brand"
+              placeholder="Marca"
+              value={formData.brand || ""}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded mb-3"
+              autoComplete="off"
+            />
+            <input
+              type="text"
+              name="serial_number"
+              placeholder="Número de serie"
+              value={formData.serial_number || ""}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded mb-3"
+              autoComplete="off"
+            />
+            <input
+              type="text"
+              name="assigned_to"
+              placeholder="Asignado a"
+              value={formData.assigned_to || ""}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded mb-3"
+              autoComplete="off"
+            />
+            <input
+              type="date"
+              name="fecha_compra"
+              placeholder="Fecha de Compra"
+              value={formData.fecha_compra?.split('T')[0] || ""}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded mb-3"
+              autoComplete="off"
+            />
+            <input
+              type="date"
+              name="fecha_garantia"
+              placeholder="Fecha de Garantía"
+              value={formData.fecha_garantia?.split('T')[0] || ""}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded mb-3"
+              autoComplete="off"
+            />
+            <input
+              type="number"
+              step="0.01"
+              name="precio_compra"
+              placeholder="Precio de Compra (€)"
+              value={formData.precio_compra || ""}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded mb-3"
+              autoComplete="off"
+            />
+            <input
+              type="text"
+              name="category"
+              placeholder="Categoría"
+              value={formData.category || ""}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded mb-3"
+              autoComplete="off"
+            />
+            <input
+              type="text"
+              name="status"
+              placeholder="Estado"
+              value={formData.status || ""}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded mb-3"
+              autoComplete="off"
+            />
+          </>
+        )}
+
         <input
           type="file"
           accept="image/*"
