@@ -24,7 +24,8 @@ const Dashboard = () => {
       asset.model?.toLowerCase().includes(query) ||
       asset.brand?.toLowerCase().includes(query) ||
       asset.serial_number?.toLowerCase().includes(query) ||
-      asset.category?.toLowerCase().includes(query)
+      asset.category?.toLowerCase().includes(query) ||
+      asset.assigned_to?.toLowerCase().includes(query)
     );
   });
 
@@ -34,7 +35,7 @@ const Dashboard = () => {
 
       <input
         type="text"
-        placeholder="🔍 Buscar por nombre, modelo, marca..."
+        placeholder="🔍 Buscar por nombre, modelo, marca, serie, categoría o asignado a..."
         className="w-full px-4 py-2 border mb-6 rounded"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}

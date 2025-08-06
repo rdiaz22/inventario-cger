@@ -86,7 +86,8 @@ const AssetList = () => {
       asset.model?.toLowerCase().includes(query) ||
       asset.brand?.toLowerCase().includes(query) ||
       asset.serial_number?.toLowerCase().includes(query) ||
-      asset.category?.toLowerCase().includes(query);
+      asset.category?.toLowerCase().includes(query) ||
+      asset.assigned_to?.toLowerCase().includes(query);
 
     const matchesCategory = selectedCategory
       ? asset.category === selectedCategory
@@ -176,7 +177,7 @@ const AssetList = () => {
 
       <input
         type="text"
-        placeholder="🔍 Buscar por nombre, modelo, marca..."
+        placeholder="🔍 Buscar por nombre, modelo, marca, asignado a..."
         className="w-full px-4 py-2 border mb-4 rounded"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
