@@ -162,32 +162,66 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
 
       // Actualizar EPI principal con todos los campos disponibles
       const epiUpdateData = {
-        name: formData.name,
-        category: formData.category,
-        brand: formData.brand,
-        model: formData.model,
-        serial_number: formData.serial_number,
-        details: formData.details,
-        assigned_to: formData.assigned_to,
-        status: formData.status,
-        supplier: formData.supplier,
-        image_url: imageUrl,
-        codigo: formData.codigo || asset.codigo,
-        // Campos de fechas y precio
-        fecha_compra: formData.fecha_compra || null,
-        fecha_garantia: formData.fecha_garantia || null,
-        precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null
+        name: formData.name || null,
+        category: formData.category || null,
+        brand: formData.brand || null,
+        model: formData.model || null,
+        serial_number: formData.serial_number || null,
+        details: formData.details || null,
+        assigned_to: formData.assigned_to || null,
+        status: formData.status || 'Activo',
+        supplier: formData.supplier || null,
+        image_url: imageUrl || null,
+        codigo: formData.codigo || asset.codigo || null,
+        // Campos de fechas y precio - manejar tipos correctamente
+        fecha_compra: formData.fecha_compra ? formData.fecha_compra : null,
+        fecha_garantia: formData.fecha_garantia ? formData.fecha_garantia : null,
+        precio_compra: (() => {
+          if (!formData.precio_compra || formData.precio_compra === '' || formData.precio_compra === 'null') {
+            return null;
+          }
+          const num = parseFloat(formData.precio_compra);
+          return isNaN(num) ? null : num;
+        })()
       };
 
-      // Filtrar campos que no sean null o undefined
+      // Filtrar campos que no sean null, undefined o string vacío
       const filteredUpdateData = Object.fromEntries(
         Object.entries(epiUpdateData).filter(([key, value]) => 
-          value !== null && value !== undefined && value !== ''
+          value !== null && value !== undefined && value !== '' && value !== 'null'
         )
       );
 
       console.log("Actualizando EPI con ID:", epiId, "Datos filtrados:", filteredUpdateData);
 
+      // Log detallado de cada campo
+      console.log("Campos individuales a enviar:");
+      Object.entries(filteredUpdateData).forEach(([key, value]) => {
+        console.log(`${key}:`, value, `(tipo: ${typeof value})`);
+      });
+
+      // Primero intentar con solo los campos básicos
+      const basicFields = {
+        name: filteredUpdateData.name,
+        model: filteredUpdateData.model,
+        supplier: filteredUpdateData.supplier,
+        status: filteredUpdateData.status
+      };
+
+      console.log("Prueba con campos básicos:", basicFields);
+
+      const { error: basicError } = await supabase
+        .from("epi_assets")
+        .update(basicFields)
+        .eq("id", epiId);
+
+      if (basicError) {
+        console.error("Error con campos básicos:", basicError);
+        setLoading(false);
+        return;
+      }
+
+      // Si los campos básicos funcionan, intentar con todos los campos
       const { error: epiError } = await supabase
         .from("epi_assets")
         .update(filteredUpdateData)
@@ -201,7 +235,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           hint: epiError.hint,
           code: epiError.code
         });
-        console.error("Datos que se intentaron enviar:", epiUpdateData);
+        console.error("Datos que se intentaron enviar:", filteredUpdateData);
         setLoading(false);
         return;
       }
@@ -243,7 +277,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         fecha_compra: formData.fecha_compra || null,
         fecha_garantia: formData.fecha_garantia || null,
         precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null,
-        status: formData.status,
+        status: formData.status || 'Activo',
         image_url: imageUrl
       };
 
