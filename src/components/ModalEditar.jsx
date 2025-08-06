@@ -140,91 +140,40 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
 
     // Si es EPI, actualizar solo en epi_assets y epi_sizes
     if (isEPI) {
-      // Primero necesitamos obtener el ID correcto del EPI
-      let epiId = asset.id;
+      // Usar el ID directamente del asset
+      const epiId = asset.id;
       
-      // Si no tenemos el ID correcto, buscarlo por código
-      if (!epiId || epiId === asset.id) {
-        const { data: epiData, error: epiError } = await supabase
-          .from("epi_assets")
-          .select("id")
-          .eq("codigo", asset.codigo)
-          .single();
-        
-        if (!epiError && epiData) {
-          epiId = epiData.id;
-        } else {
-          console.error("Error obteniendo ID del EPI:", epiError);
-          setLoading(false);
-          return;
-        }
-      }
+      console.log("ID del EPI a actualizar:", epiId);
+      console.log("Datos del formulario:", formData);
 
-      // Actualizar EPI principal con todos los campos disponibles
-      const epiUpdateData = {
-        name: formData.name || null,
-        category: formData.category || null,
-        brand: formData.brand || null,
-        model: formData.model || null,
-        serial_number: formData.serial_number || null,
-        details: formData.details || null,
-        assigned_to: formData.assigned_to || null,
-        status: formData.status || 'Activo',
-        supplier: formData.supplier || null,
-        image_url: imageUrl || null,
-        codigo: formData.codigo || asset.codigo || null,
-        // Campos de fechas y precio - manejar tipos correctamente
-        fecha_compra: formData.fecha_compra ? formData.fecha_compra : null,
-        fecha_garantia: formData.fecha_garantia ? formData.fecha_garantia : null,
-        precio_compra: (() => {
-          if (!formData.precio_compra || formData.precio_compra === '' || formData.precio_compra === 'null') {
-            return null;
-          }
-          const num = parseFloat(formData.precio_compra);
-          return isNaN(num) ? null : num;
-        })()
-      };
-
-      // Filtrar campos que no sean null, undefined o string vacío
-      const filteredUpdateData = Object.fromEntries(
-        Object.entries(epiUpdateData).filter(([key, value]) => 
-          value !== null && value !== undefined && value !== '' && value !== 'null'
-        )
-      );
-
-      console.log("Actualizando EPI con ID:", epiId, "Datos filtrados:", filteredUpdateData);
-
-      // Log detallado de cada campo
-      console.log("Campos individuales a enviar:");
-      Object.entries(filteredUpdateData).forEach(([key, value]) => {
-        console.log(`${key}:`, value, `(tipo: ${typeof value})`);
-      });
-
-      // Primero intentar con solo los campos básicos
-      const basicFields = {
-        name: filteredUpdateData.name,
-        model: filteredUpdateData.model,
-        supplier: filteredUpdateData.supplier,
-        status: filteredUpdateData.status
-      };
-
-      console.log("Prueba con campos básicos:", basicFields);
-
-      const { error: basicError } = await supabase
+      // Verificar que el EPI existe antes de actualizar
+      const { data: existingEpi, error: checkError } = await supabase
         .from("epi_assets")
-        .update(basicFields)
-        .eq("id", epiId);
+        .select("id, name")
+        .eq("id", epiId)
+        .single();
 
-      if (basicError) {
-        console.error("Error con campos básicos:", basicError);
+      if (checkError) {
+        console.error("Error verificando EPI:", checkError);
+        console.error("ID que se intentó verificar:", epiId);
         setLoading(false);
         return;
       }
 
-      // Si los campos básicos funcionan, intentar con todos los campos
+      console.log("EPI encontrado:", existingEpi);
+
+      // Actualización mínima - solo campos esenciales
+      const minimalUpdate = {
+        name: formData.name || asset.name,
+        model: formData.model || asset.model || '',
+        supplier: formData.supplier || asset.supplier || ''
+      };
+
+      console.log("Actualización mínima:", minimalUpdate);
+
       const { error: epiError } = await supabase
         .from("epi_assets")
-        .update(filteredUpdateData)
+        .update(minimalUpdate)
         .eq("id", epiId);
 
       if (epiError) {
@@ -235,10 +184,11 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           hint: epiError.hint,
           code: epiError.code
         });
-        console.error("Datos que se intentaron enviar:", filteredUpdateData);
         setLoading(false);
         return;
       }
+
+      console.log("EPI actualizado exitosamente");
 
       // Eliminar tallas existentes
       await supabase
