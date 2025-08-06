@@ -106,7 +106,7 @@ const AssetList = () => {
     
     try {
       if (asset.category === "EPI") {
-        // Para EPIs, cargar datos de ambas tablas
+        // Para EPIs, cargar datos solo de epi_assets
         const { data: epiData, error: epiError } = await supabase
           .from("epi_assets")
           .select(`
@@ -119,98 +119,28 @@ const AssetList = () => {
         console.log("Datos de epi_assets:", epiData); // Debug
         console.log("Error epi_assets:", epiError); // Debug
 
-        // Intentar buscar por código primero
-        let { data: assetData, error: assetError } = await supabase
-          .from("assets")
-          .select("*")
-          .eq("codigo", asset.codigo)
-          .eq("category", "EPI")
-          .single();
-
-        // Si no se encuentra por código, intentar por nombre
-        if (assetError) {
-          console.log("Buscando por nombre como fallback..."); // Debug
-          const { data: assetDataByName, error: assetErrorByName } = await supabase
-            .from("assets")
-            .select("*")
-            .eq("name", asset.name)
-            .eq("category", "EPI")
-            .single();
-          
-          if (!assetErrorByName) {
-            assetData = assetDataByName;
-            assetError = null;
-          }
-        }
-
-        console.log("Datos de assets:", assetData); // Debug
-        console.log("Error assets:", assetError); // Debug
-
-        if (!epiError) {
-          // Si no encontramos datos en assets, crear un registro básico
-          if (!assetData) {
-            console.log("No se encontró registro en assets, creando uno básico..."); // Debug
-            
-            // Crear datos básicos para assets basados en epi_assets
-            const basicAssetData = {
-              name: epiData.name,
-              model: epiData.model || '',
-              brand: epiData.brand || '',
-              details: epiData.details || '',
-              status: epiData.status || 'Disponible',
-              assigned_to: epiData.assigned_to || '',
-              category: 'EPI',
-              codigo: epiData.codigo || `EPI-${epiData.id.slice(0, 8).toUpperCase()}`,
-              image_url: epiData.image_url || '',
-              serial_number: epiData.serial_number || '',
-              location: epiData.location || '',
-              purchase_date: epiData.purchase_date || null,
-              warranty_expiry: epiData.warranty_expiry || null,
-              supplier: epiData.supplier || '',
-              fabricante: epiData.fabricante || '',
-              certificacion: epiData.certificacion || ''
-            };
-            
-            assetData = basicAssetData;
-            console.log("Datos básicos creados:", basicAssetData); // Debug
-            console.log("Campos específicos:", {
-              name: basicAssetData.name,
-              brand: basicAssetData.brand,
-              model: basicAssetData.model,
-              details: basicAssetData.details,
-              status: basicAssetData.status,
-              assigned_to: basicAssetData.assigned_to
-            }); // Debug
-          }
-          
+        if (!epiError && epiData) {
+          // Crear objeto completo con datos de epi_assets
           const completeAsset = {
             ...asset, // Datos base
             ...epiData, // Datos específicos de epi_assets
-            ...(assetData || {}), // Datos generales de assets
+            category: "EPI", // Asegurar que la categoría sea EPI
             tallas: epiData.epi_sizes || []
           };
           
           console.log("Asset completo:", completeAsset); // Debug
-          console.log("Campos finales del asset:", {
-            name: completeAsset.name,
-            brand: completeAsset.brand,
-            model: completeAsset.model,
-            details: completeAsset.details,
-            status: completeAsset.status,
-            assigned_to: completeAsset.assigned_to,
-            supplier: completeAsset.supplier,
-            fabricante: completeAsset.fabricante,
-            certificacion: completeAsset.certificacion
-          }); // Debug
           setSelectedAsset(completeAsset);
+        } else {
+          console.error("Error cargando EPI:", epiError);
+          setSelectedAsset(asset); // Usar datos básicos si hay error
         }
       } else {
         // Para activos normales, usar los datos que ya tenemos
         setSelectedAsset(asset);
       }
     } catch (error) {
-      console.error("Error cargando datos del activo:", error);
-      setSelectedAsset(asset); // Usar datos básicos si hay error
+      console.error("Error al cargar asset:", error);
+      setSelectedAsset(asset); // Usar datos básicos en caso de error
     } finally {
       setIsLoadingAsset(false);
     }

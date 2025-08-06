@@ -14,7 +14,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
   useEffect(() => {
     const loadAssetData = async () => {
       if (isEPI) {
-        // Para EPIs, cargar datos de ambas tablas
+        // Para EPIs, cargar datos solo de epi_assets
         const { data: epiData, error: epiError } = await supabase
           .from("epi_assets")
           .select(`
@@ -24,19 +24,10 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           .eq("id", asset.id)
           .single();
 
-        // Buscar en assets por codigo para encontrar el registro correspondiente
-        const { data: assetData, error: assetError } = await supabase
-          .from("assets")
-          .select("*")
-          .eq("codigo", asset.codigo)
-          .eq("category", "EPI")
-          .single();
-
-        if (!epiError) {
+        if (!epiError && epiData) {
           setFormData({
             ...asset, // Usar los datos que ya tenemos del asset
             ...epiData, // Agregar datos específicos de epi_assets
-            ...(assetData || {}), // Agregar datos de assets si existen
             image_url: epiData.image_url || asset.image_url || ""
           });
           
@@ -44,6 +35,9 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           if (epiData.epi_sizes) {
             setEpiSizes(epiData.epi_sizes.map(t => ({ size: t.size, units: t.units })));
           }
+        } else {
+          console.error("Error cargando datos de EPI:", epiError);
+          setFormData(asset); // Usar datos básicos si hay error
         }
       } else {
         // Para activos normales, usar los datos que ya tenemos
@@ -120,17 +114,30 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
       imageUrl = publicUrlData.publicUrl;
     }
 
-    // Si es EPI, actualizar en epi_assets, epi_sizes Y assets
+    // Si es EPI, actualizar solo en epi_assets y epi_sizes
     if (isEPI) {
-      // Actualizar EPI principal
+      // Actualizar EPI principal con todos los campos
+      const epiUpdateData = {
+        name: formData.name,
+        brand: formData.brand,
+        model: formData.model,
+        details: formData.details,
+        serial_number: formData.serial_number,
+        assigned_to: formData.assigned_to,
+        supplier: formData.supplier,
+        fabricante: formData.fabricante,
+        certificacion: formData.certificacion,
+        status: formData.status,
+        image_url: imageUrl,
+        // Campos de fechas y precio
+        fecha_compra: formData.fecha_compra || null,
+        fecha_garantia: formData.fecha_garantia || null,
+        precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null
+      };
+
       const { error: epiError } = await supabase
         .from("epi_assets")
-        .update({
-          name: formData.name,
-          model: formData.model,
-          supplier: formData.supplier,
-          image_url: imageUrl
-        })
+        .update(epiUpdateData)
         .eq("id", asset.id);
 
       if (epiError) {
@@ -163,34 +170,8 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           console.error("Error al actualizar tallas:", sizesError);
         }
       }
-
-      // También actualizar en assets para mantener consistencia
-      // Solo campos que existen en la tabla assets
-      const assetUpdateData = {
-        name: formData.name,
-        brand: formData.brand,
-        model: formData.model,
-        details: formData.details,
-        serial_number: formData.serial_number,
-        assigned_to: formData.assigned_to,
-        category: formData.category,
-        fecha_compra: formData.fecha_compra,
-        fecha_garantia: formData.fecha_garantia,
-        precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null,
-        status: formData.status,
-        image_url: imageUrl
-      };
-
-      const { error: assetError } = await supabase
-        .from("assets")
-        .update(assetUpdateData)
-        .eq("id", asset.id);
-
-      if (assetError) {
-        console.error("Error al actualizar activo:", assetError.message);
-      }
     } else {
-      // Actualizar activo normal
+      // Actualizar activo normal en tabla assets
       const updateData = {
         name: formData.name,
         brand: formData.brand,
@@ -199,8 +180,8 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         serial_number: formData.serial_number,
         assigned_to: formData.assigned_to,
         category: formData.category,
-        fecha_compra: formData.fecha_compra,
-        fecha_garantia: formData.fecha_garantia,
+        fecha_compra: formData.fecha_compra || null,
+        fecha_garantia: formData.fecha_garantia || null,
         precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null,
         status: formData.status,
         image_url: imageUrl

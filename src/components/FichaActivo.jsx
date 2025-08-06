@@ -58,25 +58,16 @@ const FichaActivo = () => {
             .eq("id", id)
             .single();
 
-          if (epiError) {
-            console.error("Error al cargar activo", epiError);
-          } else {
-            // Buscar datos generales en assets por código
-            const { data: assetData, error: assetError } = await supabase
-              .from("assets")
-              .select("*")
-              .eq("codigo", epiData.codigo)
-              .eq("category", "EPI")
-              .single();
-
-            // Combinar datos de ambas tablas
+          if (!epiError && epiData) {
+            // Combinar datos de epi_assets
             setActivo({
               ...epiData, // Datos específicos de epi_assets
-              ...(assetData || {}), // Datos generales de assets (si existen)
               category: "EPI",
               codigo: epiData.codigo || `EPI-${epiData.id.slice(0, 8).toUpperCase()}`,
               tallas: epiData.epi_sizes || []
             });
+          } else {
+            console.error("Error al cargar activo", epiError);
           }
         }
       } catch (error) {

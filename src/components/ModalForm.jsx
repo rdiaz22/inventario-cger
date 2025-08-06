@@ -102,22 +102,38 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
         }
       }
 
-      // Si es EPI, guardar en tabla epi_assets, epi_sizes Y assets
+      // Si es EPI, guardar solo en tabla epi_assets y epi_sizes
       if (isEPI) {
         // Generar un código único si no existe
         const codigo = form.codigo || `EPI-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
         
         console.log("Guardando EPI con código:", codigo); // Debug
         
+        // Guardar en epi_assets con todos los campos necesarios
+        const epiDataToInsert = {
+          name: form.name,
+          brand: form.brand,
+          model: form.model,
+          details: form.details,
+          serial_number: form.serial_number,
+          assigned_to: form.assigned_to,
+          supplier: form.supplier,
+          fabricante: form.fabricante,
+          certificacion: form.certificacion,
+          image_url: imageUrl,
+          codigo,
+          status: form.status,
+          // Campos de fechas y precio
+          fecha_compra: form.fecha_compra || null,
+          fecha_garantia: form.fecha_garantia || null,
+          precio_compra: form.precio_compra ? parseFloat(form.precio_compra) : null
+        };
+        
+        console.log("Datos EPI a insertar:", epiDataToInsert); // Debug
+        
         const { data: epiData, error: epiError } = await supabase
           .from("epi_assets")
-          .insert([{
-            name: form.name,
-            model: form.model,
-            supplier: form.supplier,
-            image_url: imageUrl,
-            codigo
-          }])
+          .insert([epiDataToInsert])
           .select();
 
         if (epiError) {
@@ -145,34 +161,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
             console.error("Error guardando tallas:", sizesError);
           }
         }
-
-        // También guardar en assets para mantener consistencia
-        // Solo campos que existen en la tabla assets
-        const assetData = {
-          name: form.name,
-          brand: form.brand,
-          model: form.model,
-          details: form.details,
-          serial_number: form.serial_number,
-          assigned_to: form.assigned_to,
-          category: form.category,
-          fecha_compra: form.fecha_compra,
-          fecha_garantia: form.fecha_garantia,
-          precio_compra: form.precio_compra ? parseFloat(form.precio_compra) : null,
-          status: form.status,
-          image_url: imageUrl,
-          codigo
-        };
-        
-        console.log("Guardando en assets:", assetData); // Debug
-        
-        const { error: assetError } = await supabase.from("assets").insert([assetData]);
-        
-        if (assetError) {
-          console.error("Error guardando en assets:", assetError);
-        }
       } else {
-        // Guardar activo normal - solo campos que existen en assets
+        // Guardar activo normal en tabla assets
         const assetData = {
           name: form.name,
           brand: form.brand,
@@ -181,14 +171,20 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           serial_number: form.serial_number,
           assigned_to: form.assigned_to,
           category: form.category,
-          fecha_compra: form.fecha_compra,
-          fecha_garantia: form.fecha_garantia,
+          fecha_compra: form.fecha_compra || null,
+          fecha_garantia: form.fecha_garantia || null,
           precio_compra: form.precio_compra ? parseFloat(form.precio_compra) : null,
           status: form.status,
           image_url: imageUrl
         };
         
-        await supabase.from("assets").insert([assetData]);
+        console.log("Guardando activo normal:", assetData); // Debug
+        
+        const { error: assetError } = await supabase.from("assets").insert([assetData]);
+        
+        if (assetError) {
+          console.error("Error guardando activo:", assetError);
+        }
       }
 
       onCreated();
