@@ -171,7 +171,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         codigo: formData.codigo || asset.codigo || null
       };
 
-      console.log("Datos de actualización:", updateData);
+      console.log("Datos de actualización EPI:", updateData);
 
       const { error: epiError } = await supabase
         .from("epi_assets")
@@ -191,6 +191,56 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
       }
 
       console.log("EPI actualizado exitosamente");
+
+      // También actualizar en assets para mantener fechas y precio
+      const assetUpdateData = {
+        name: formData.name || existingEpi.name,
+        category: formData.category || 'EPI',
+        brand: formData.brand || null,
+        model: formData.model || null,
+        serial_number: formData.serial_number || null,
+        details: formData.details || null,
+        assigned_to: formData.assigned_to || null,
+        status: formData.status || 'Activo',
+        image_url: imageUrl || existingEpi.image_url,
+        codigo: formData.codigo || asset.codigo || null,
+        // Campos de fechas y precio
+        fecha_compra: formData.fecha_compra || null,
+        fecha_garantia: formData.fecha_garantia || null,
+        precio_compra: formData.precio_compra && formData.precio_compra !== '' ? parseFloat(formData.precio_compra) : null
+      };
+
+      console.log("Datos de actualización Asset:", assetUpdateData);
+
+      // Buscar el registro correspondiente en assets
+      const { data: assetRecord, error: assetCheckError } = await supabase
+        .from("assets")
+        .select("id")
+        .eq("codigo", asset.codigo)
+        .eq("category", "EPI")
+        .single();
+
+      if (assetCheckError) {
+        console.log("No se encontró registro en assets, creando uno nuevo");
+        // Crear nuevo registro en assets
+        const { error: assetCreateError } = await supabase
+          .from("assets")
+          .insert([assetUpdateData]);
+        
+        if (assetCreateError) {
+          console.error("Error creando registro en assets:", assetCreateError);
+        }
+      } else {
+        // Actualizar registro existente en assets
+        const { error: assetUpdateError } = await supabase
+          .from("assets")
+          .update(assetUpdateData)
+          .eq("id", assetRecord.id);
+        
+        if (assetUpdateError) {
+          console.error("Error actualizando registro en assets:", assetUpdateError);
+        }
+      }
 
       // Eliminar tallas existentes
       await supabase
@@ -265,11 +315,93 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           className="w-full border px-3 py-2 rounded mb-3"
           autoComplete="off"
         />
+        <textarea
+          name="details"
+          placeholder="Descripción del producto"
+          value={formData.details || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3 h-20 resize-none"
+          rows="3"
+          autoComplete="off"
+        />
+        <input
+          type="text"
+          name="brand"
+          placeholder="Marca"
+          value={formData.brand || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
         <input
           type="text"
           name="model"
           placeholder="Modelo"
           value={formData.model || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="text"
+          name="serial_number"
+          placeholder="Número de serie"
+          value={formData.serial_number || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="text"
+          name="assigned_to"
+          placeholder="Asignado a"
+          value={formData.assigned_to || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="date"
+          name="fecha_compra"
+          placeholder="Fecha de Compra"
+          value={formData.fecha_compra?.split('T')[0] || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="date"
+          name="fecha_garantia"
+          placeholder="Fecha de Garantía"
+          value={formData.fecha_garantia?.split('T')[0] || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="number"
+          step="0.01"
+          name="precio_compra"
+          placeholder="Precio de Compra (€)"
+          value={formData.precio_compra || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="text"
+          name="category"
+          placeholder="Categoría"
+          value={formData.category || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="text"
+          name="status"
+          placeholder="Estado"
+          value={formData.status || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
           autoComplete="off"
@@ -295,94 +427,6 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
             className="w-full border px-3 py-2 rounded mb-3"
             autoComplete="off"
           />
-        )}
-
-        {/* Campos para activos normales */}
-        {!isEPI && (
-          <>
-            <textarea
-              name="details"
-              placeholder="Descripción del producto"
-              value={formData.details || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3 h-20 resize-none"
-              rows="3"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              name="brand"
-              placeholder="Marca"
-              value={formData.brand || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              name="serial_number"
-              placeholder="Número de serie"
-              value={formData.serial_number || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              name="assigned_to"
-              placeholder="Asignado a"
-              value={formData.assigned_to || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="date"
-              name="fecha_compra"
-              placeholder="Fecha de Compra"
-              value={formData.fecha_compra?.split('T')[0] || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="date"
-              name="fecha_garantia"
-              placeholder="Fecha de Garantía"
-              value={formData.fecha_garantia?.split('T')[0] || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="number"
-              step="0.01"
-              name="precio_compra"
-              placeholder="Precio de Compra (€)"
-              value={formData.precio_compra || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              name="category"
-              placeholder="Categoría"
-              value={formData.category || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              name="status"
-              placeholder="Estado"
-              value={formData.status || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-          </>
         )}
 
         <input
