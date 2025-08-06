@@ -14,15 +14,39 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
   useEffect(() => {
     const loadAssetData = async () => {
       if (isEPI) {
-        // Para EPIs, cargar datos solo de epi_assets
-        const { data: epiData, error: epiError } = await supabase
-          .from("epi_assets")
-          .select(`
-            *,
-            epi_sizes (*)
-          `)
-          .eq("id", asset.id)
-          .single();
+        // Para EPIs, buscar por código en lugar de ID
+        let epiData = null;
+        let epiError = null;
+
+        // Intentar buscar por código primero
+        if (asset.codigo) {
+          const { data, error } = await supabase
+            .from("epi_assets")
+            .select(`
+              *,
+              epi_sizes (*)
+            `)
+            .eq("codigo", asset.codigo)
+            .single();
+          
+          epiData = data;
+          epiError = error;
+        }
+
+        // Si no se encuentra por código, intentar por ID
+        if (!epiData && asset.id) {
+          const { data, error } = await supabase
+            .from("epi_assets")
+            .select(`
+              *,
+              epi_sizes (*)
+            `)
+            .eq("id", asset.id)
+            .single();
+          
+          epiData = data;
+          epiError = error;
+        }
 
         if (!epiError && epiData) {
           setFormData({
@@ -116,6 +140,26 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
 
     // Si es EPI, actualizar solo en epi_assets y epi_sizes
     if (isEPI) {
+      // Primero necesitamos obtener el ID correcto del EPI
+      let epiId = asset.id;
+      
+      // Si no tenemos el ID correcto, buscarlo por código
+      if (!epiId || epiId === asset.id) {
+        const { data: epiData, error: epiError } = await supabase
+          .from("epi_assets")
+          .select("id")
+          .eq("codigo", asset.codigo)
+          .single();
+        
+        if (!epiError && epiData) {
+          epiId = epiData.id;
+        } else {
+          console.error("Error obteniendo ID del EPI:", epiError);
+          setLoading(false);
+          return;
+        }
+      }
+
       // Actualizar EPI principal con todos los campos
       const epiUpdateData = {
         name: formData.name,
@@ -135,10 +179,12 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null
       };
 
+      console.log("Actualizando EPI con ID:", epiId, "Datos:", epiUpdateData);
+
       const { error: epiError } = await supabase
         .from("epi_assets")
         .update(epiUpdateData)
-        .eq("id", asset.id);
+        .eq("id", epiId);
 
       if (epiError) {
         console.error("Error al actualizar EPI:", epiError);
@@ -150,13 +196,13 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
       await supabase
         .from("epi_sizes")
         .delete()
-        .eq("epi_id", asset.id);
+        .eq("epi_id", epiId);
 
       // Insertar nuevas tallas
       const sizesToInsert = epiSizes
         .filter(size => size.size && size.units > 0)
         .map(size => ({
-          epi_id: asset.id,
+          epi_id: epiId,
           size: size.size,
           units: size.units
         }));
@@ -217,6 +263,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           value={formData.name || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
         />
         <textarea
           name="details"
@@ -225,6 +272,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3 h-20 resize-none"
           rows="3"
+          autoComplete="off"
         />
         <input
           type="text"
@@ -233,6 +281,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           value={formData.brand || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
         />
         <input
           type="text"
@@ -241,6 +290,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           value={formData.model || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
         />
         <input
           type="text"
@@ -249,6 +299,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           value={formData.serial_number || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
         />
         <input
           type="date"
@@ -257,6 +308,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           value={formData.fecha_compra?.split('T')[0] || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
         />
         <input
           type="date"
@@ -265,6 +317,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           value={formData.fecha_garantia?.split('T')[0] || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
         />
         <input
           type="number"
@@ -274,6 +327,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           value={formData.precio_compra || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
         />
         <input
           type="text"
@@ -282,6 +336,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           value={formData.category || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
         />
         <input
           type="text"
@@ -290,6 +345,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           value={formData.status || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
         />
         <input
           type="file"
@@ -309,6 +365,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
                   value={size.size}
                   onChange={(e) => handleEpiSizeChange(index, "size", e.target.value)}
                   className="w-24 border px-2 py-1 rounded mr-2"
+                  autoComplete="off"
                 />
                 <input
                   type="number"
@@ -316,6 +373,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
                   value={size.units}
                   onChange={(e) => handleEpiSizeChange(index, "units", parseInt(e.target.value) || 0)}
                   className="w-16 border px-2 py-1 rounded"
+                  autoComplete="off"
                 />
                 <button
                   type="button"
