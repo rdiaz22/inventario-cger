@@ -62,8 +62,38 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
           )}
           <div className="grid grid-cols-1 gap-4 text-sm">
             <DetailItem label="Nombre" value={asset.name} />
+            <DetailItem label="Categoría" value={asset.category || "No definida"} />
+            <DetailItem label="Marca" value={asset.brand} />
             <DetailItem label="Modelo" value={asset.model} />
+            <DetailItem label="Descripción" value={asset.details} />
+            <DetailItem label="Número de Serie" value={asset.serial_number} />
+            <DetailItem label="Asignado a" value={asset.assigned_to} />
+            <DetailItem label="Estado" value={asset.status} />
             <DetailItem label="Código" value={asset.codigo || "No definido"} />
+            <DetailItem
+              label="Fecha de Compra"
+              value={
+                asset.fecha_compra
+                  ? new Date(asset.fecha_compra).toLocaleDateString("es-ES")
+                  : "No registrada"
+              }
+            />
+            <DetailItem
+              label="Fecha de Garantía"
+              value={
+                asset.fecha_garantia
+                  ? new Date(asset.fecha_garantia).toLocaleDateString("es-ES")
+                  : "No registrada"
+              }
+            />
+            <DetailItem
+              label="Precio de Compra"
+              value={
+                asset.precio_compra
+                  ? `${parseFloat(asset.precio_compra).toFixed(2)} €`
+                  : "No registrado"
+              }
+            />
             
             {/* Información específica de EPIs */}
             {asset.category === "EPI" && (
@@ -86,41 +116,6 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
                     </div>
                   </div>
                 )}
-              </>
-            )}
-            
-            {/* Información para activos normales */}
-            {asset.category !== "EPI" && (
-              <>
-                <DetailItem label="Marca" value={asset.brand} />
-                <DetailItem label="Descripción" value={asset.details} />
-                <DetailItem label="Número de Serie" value={asset.serial_number} />
-                <DetailItem label="Asignado a" value={asset.assigned_to} />
-                <DetailItem label="Categoría" value={asset.category || "No definida"} />
-                <DetailItem
-                  label="Fecha de Compra"
-                  value={
-                    asset.fecha_compra
-                      ? new Date(asset.fecha_compra).toLocaleDateString("es-ES")
-                      : "No registrada"
-                  }
-                />
-                <DetailItem
-                  label="Fecha de Garantía"
-                  value={
-                    asset.fecha_garantia
-                      ? new Date(asset.fecha_garantia).toLocaleDateString("es-ES")
-                      : "No registrada"
-                  }
-                />
-                <DetailItem
-                  label="Precio de Compra"
-                  value={
-                    asset.precio_compra
-                      ? `${parseFloat(asset.precio_compra).toFixed(2)} €`
-                      : "No registrado"
-                  }
-                />
               </>
             )}
           </div>

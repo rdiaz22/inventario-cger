@@ -160,13 +160,23 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         }
       }
 
-      // Actualizar EPI principal solo con los campos que existen en la tabla
+      // Actualizar EPI principal con todos los campos disponibles
       const epiUpdateData = {
         name: formData.name,
+        category: formData.category,
+        brand: formData.brand,
         model: formData.model,
+        serial_number: formData.serial_number,
+        details: formData.details,
+        assigned_to: formData.assigned_to,
+        status: formData.status,
         supplier: formData.supplier,
         image_url: imageUrl,
-        codigo: formData.codigo || asset.codigo
+        codigo: formData.codigo || asset.codigo,
+        // Campos de fechas y precio
+        fecha_compra: formData.fecha_compra || null,
+        fecha_garantia: formData.fecha_garantia || null,
+        precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null
       };
 
       // Filtrar campos que no sean null o undefined
@@ -269,11 +279,93 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           className="w-full border px-3 py-2 rounded mb-3"
           autoComplete="off"
         />
+        <textarea
+          name="details"
+          placeholder="Descripción del producto"
+          value={formData.details || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3 h-20 resize-none"
+          rows="3"
+          autoComplete="off"
+        />
+        <input
+          type="text"
+          name="brand"
+          placeholder="Marca"
+          value={formData.brand || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
         <input
           type="text"
           name="model"
           placeholder="Modelo"
           value={formData.model || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="text"
+          name="serial_number"
+          placeholder="Número de serie"
+          value={formData.serial_number || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="text"
+          name="assigned_to"
+          placeholder="Asignado a"
+          value={formData.assigned_to || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="date"
+          name="fecha_compra"
+          placeholder="Fecha de Compra"
+          value={formData.fecha_compra?.split('T')[0] || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="date"
+          name="fecha_garantia"
+          placeholder="Fecha de Garantía"
+          value={formData.fecha_garantia?.split('T')[0] || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="number"
+          step="0.01"
+          name="precio_compra"
+          placeholder="Precio de Compra (€)"
+          value={formData.precio_compra || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="text"
+          name="category"
+          placeholder="Categoría"
+          value={formData.category || ""}
+          onChange={handleChange}
+          className="w-full border px-3 py-2 rounded mb-3"
+          autoComplete="off"
+        />
+        <input
+          type="text"
+          name="status"
+          placeholder="Estado"
+          value={formData.status || ""}
           onChange={handleChange}
           className="w-full border px-3 py-2 rounded mb-3"
           autoComplete="off"
@@ -299,94 +391,6 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
             className="w-full border px-3 py-2 rounded mb-3"
             autoComplete="off"
           />
-        )}
-
-        {/* Campos para activos normales */}
-        {!isEPI && (
-          <>
-            <textarea
-              name="details"
-              placeholder="Descripción del producto"
-              value={formData.details || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3 h-20 resize-none"
-              rows="3"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              name="brand"
-              placeholder="Marca"
-              value={formData.brand || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              name="serial_number"
-              placeholder="Número de serie"
-              value={formData.serial_number || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              name="assigned_to"
-              placeholder="Asignado a"
-              value={formData.assigned_to || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="date"
-              name="fecha_compra"
-              placeholder="Fecha de Compra"
-              value={formData.fecha_compra?.split('T')[0] || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="date"
-              name="fecha_garantia"
-              placeholder="Fecha de Garantía"
-              value={formData.fecha_garantia?.split('T')[0] || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="number"
-              step="0.01"
-              name="precio_compra"
-              placeholder="Precio de Compra (€)"
-              value={formData.precio_compra || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              name="category"
-              placeholder="Categoría"
-              value={formData.category || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              name="status"
-              placeholder="Estado"
-              value={formData.status || ""}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded mb-3"
-              autoComplete="off"
-            />
-          </>
         )}
 
         <input
