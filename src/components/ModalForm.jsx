@@ -150,32 +150,6 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
             console.error("Error guardando tallas:", sizesError);
           }
         }
-
-        // También guardar en assets para tener fechas y precio
-        const assetDataToInsert = {
-          name: form.name,
-          category: form.category || 'EPI',
-          brand: form.brand || null,
-          model: form.model || null,
-          serial_number: form.serial_number || null,
-          details: form.details || null,
-          assigned_to: form.assigned_to || null,
-          status: form.status || 'Activo',
-          image_url: imageUrl || null,
-          codigo,
-          // Campos de fechas y precio
-          fecha_compra: form.fecha_compra || null,
-          fecha_garantia: form.fecha_garantia || null,
-          precio_compra: form.precio_compra && form.precio_compra !== '' ? parseFloat(form.precio_compra) : null
-        };
-
-        console.log("Datos Asset a insertar:", assetDataToInsert); // Debug
-        
-        const { error: assetError } = await supabase.from("assets").insert([assetDataToInsert]);
-        
-        if (assetError) {
-          console.error("Error guardando en assets:", assetError);
-        }
       } else {
         // Guardar activo normal en tabla assets
         const assetData = {

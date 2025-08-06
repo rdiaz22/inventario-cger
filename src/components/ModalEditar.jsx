@@ -192,56 +192,6 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
 
       console.log("EPI actualizado exitosamente");
 
-      // También actualizar en assets para mantener fechas y precio
-      const assetUpdateData = {
-        name: formData.name || existingEpi.name,
-        category: formData.category || 'EPI',
-        brand: formData.brand || null,
-        model: formData.model || null,
-        serial_number: formData.serial_number || null,
-        details: formData.details || null,
-        assigned_to: formData.assigned_to || null,
-        status: formData.status || 'Activo',
-        image_url: imageUrl || existingEpi.image_url,
-        codigo: formData.codigo || asset.codigo || null,
-        // Campos de fechas y precio
-        fecha_compra: formData.fecha_compra || null,
-        fecha_garantia: formData.fecha_garantia || null,
-        precio_compra: formData.precio_compra && formData.precio_compra !== '' ? parseFloat(formData.precio_compra) : null
-      };
-
-      console.log("Datos de actualización Asset:", assetUpdateData);
-
-      // Buscar el registro correspondiente en assets
-      const { data: assetRecord, error: assetCheckError } = await supabase
-        .from("assets")
-        .select("id")
-        .eq("codigo", asset.codigo)
-        .eq("category", "EPI")
-        .single();
-
-      if (assetCheckError) {
-        console.log("No se encontró registro en assets, creando uno nuevo");
-        // Crear nuevo registro en assets
-        const { error: assetCreateError } = await supabase
-          .from("assets")
-          .insert([assetUpdateData]);
-        
-        if (assetCreateError) {
-          console.error("Error creando registro en assets:", assetCreateError);
-        }
-      } else {
-        // Actualizar registro existente en assets
-        const { error: assetUpdateError } = await supabase
-          .from("assets")
-          .update(assetUpdateData)
-          .eq("id", assetRecord.id);
-        
-        if (assetUpdateError) {
-          console.error("Error actualizando registro en assets:", assetUpdateError);
-        }
-      }
-
       // Eliminar tallas existentes
       await supabase
         .from("epi_sizes")
