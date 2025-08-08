@@ -104,7 +104,15 @@ const AssetList = () => {
         hasAssignedTo: !!asset.assigned_to,
         assignedToType: typeof asset.assigned_to,
         assignedToLower: asset.assigned_to?.toLowerCase(),
-        matchesAssignedTo: asset.assigned_to && asset.assigned_to.toLowerCase().includes(query)
+        matchesAssignedTo: asset.assigned_to && asset.assigned_to.toLowerCase().includes(query),
+        allMatches: {
+          name: asset.name?.toLowerCase().includes(query),
+          model: asset.model?.toLowerCase().includes(query),
+          brand: asset.brand?.toLowerCase().includes(query),
+          serial: asset.serial_number?.toLowerCase().includes(query),
+          category: asset.category?.toLowerCase().includes(query),
+          assigned: asset.assigned_to && asset.assigned_to.toLowerCase().includes(query)
+        }
       });
     }
     
