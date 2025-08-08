@@ -10,6 +10,14 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
   // Verificar si es un EPI
   const isEPI = asset.category === "EPI";
 
+  // Verificar si la categoría necesita campo de cantidad
+  const needsQuantity = formData.category && !isEPI && (
+    formData.category.toLowerCase().includes('mobiliario') ||
+    formData.category.toLowerCase().includes('material de oficina') ||
+    formData.category.toLowerCase().includes('material') ||
+    formData.category.toLowerCase().includes('oficina')
+  );
+
   // Cargar datos completos del activo
   useEffect(() => {
     const loadAssetData = async () => {
@@ -239,7 +247,8 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         fecha_garantia: formData.fecha_garantia || null,
         precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null,
         status: formData.status || 'Activo',
-        image_url: imageUrl
+        image_url: imageUrl,
+        quantity: needsQuantity ? parseInt(formData.quantity) || 1 : 1 // Campo de cantidad
       };
 
       const { error } = await supabase
@@ -347,6 +356,29 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           className="w-full border px-3 py-2 rounded mb-3"
           autoComplete="off"
         />
+        
+        {/* Campo de cantidad para mobiliario y material de oficina */}
+        {needsQuantity && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cantidad
+            </label>
+            <input
+              type="number"
+              min="1"
+              name="quantity"
+              placeholder="Cantidad (ej: 4 sillas)"
+              value={formData.quantity || 1}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded mb-3"
+              autoComplete="off"
+            />
+            <p className="text-xs text-gray-500 mb-3">
+              Número de unidades de este artículo
+            </p>
+          </div>
+        )}
+        
         <input
           type="text"
           name="category"
@@ -382,6 +414,18 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
             name="supplier"
             placeholder="Proveedor"
             value={formData.supplier || ""}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded mb-3"
+            autoComplete="off"
+          />
+        )}
+
+        {needsQuantity && (
+          <input
+            type="number"
+            name="quantity"
+            placeholder="Cantidad"
+            value={formData.quantity || ""}
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded mb-3"
             autoComplete="off"

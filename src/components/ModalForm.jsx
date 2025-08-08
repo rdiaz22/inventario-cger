@@ -1,30 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 
-const categorias = [
-"Accesorios",
-"Altavoz",
-"Batería",
-"Cámara",
-"Cargador",
-"Disco duro",
-"Dispositivo móvil",
-"Escáner",
-"Epi",
-"Impresora",
-"Monitor",
-"Micrófono",
-"Ordenador de sobremesa",
-"Ordenador portátil",
-"Proyector",
-"Ratón",
-"Router / Switch",
-"Teclado",
-"Tarjeta de Memoria",
-  "Otro"
-];
-
 const ModalForm = ({ isOpen, onClose, onCreated }) => {
+  const [categories, setCategories] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [form, setForm] = useState({
     name: "",
     brand: "",
@@ -37,6 +16,7 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
     fecha_garantia: "",
     precio_compra: "",
     status: "Activo", // valor por defecto
+    quantity: 1, // Campo para cantidad (por defecto 1)
     // Campos específicos para EPIs
     supplier: "",
     fabricante: "",
@@ -47,6 +27,32 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
   const [epiSizes, setEpiSizes] = useState([
     { size: "", units: 1 }
   ]);
+
+  // Cargar categorías desde la base de datos
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoadingCategories(true);
+      try {
+        const { data, error } = await supabase
+          .from("categories")
+          .select("*")
+          .order("name", { ascending: true });
+        if (error) {
+          console.error("Error al cargar categorías:", error);
+        } else {
+          setCategories(data || []);
+        }
+      } catch (error) {
+        console.error("Error inesperado al cargar categorías:", error);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -73,6 +79,14 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
 
   // Verificar si la categoría seleccionada es EPI
   const isEPI = form.category.toLowerCase() === "epi";
+
+  // Verificar si la categoría necesita campo de cantidad
+  const needsQuantity = form.category && !isEPI && (
+    form.category.toLowerCase().includes('mobiliario') ||
+    form.category.toLowerCase().includes('material de oficina') ||
+    form.category.toLowerCase().includes('material') ||
+    form.category.toLowerCase().includes('oficina')
+  );
 
   const handleSubmit = async (e) => {
       e.preventDefault();
@@ -173,7 +187,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           fecha_garantia: form.fecha_garantia || null,
           precio_compra: form.precio_compra ? parseFloat(form.precio_compra) : null,
           status: form.status,
-          image_url: imageUrl
+          image_url: imageUrl,
+          quantity: needsQuantity ? parseInt(form.quantity) || 1 : 1 // Campo de cantidad
         };
         
         console.log("Guardando activo normal:", assetData); // Debug
@@ -206,10 +221,34 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           <input type="date" value={form.fecha_compra?.split('T')[0] || ""} name="fecha_compra" onChange={handleChange} placeholder="Fecha de Compra" className="border p-2 w-full" />
           <input type="date" value={form.fecha_garantia?.split('T')[0] || ""} name="fecha_garantia" onChange={handleChange} placeholder="Fecha de Garantía" className="border p-2 w-full" />
           <input type="number" step="0.01" name="precio_compra" onChange={handleChange} placeholder="Precio de Compra (€)" className="border p-2 w-full" />
-          <select name="category" onChange={handleChange} className="border p-2 w-full">
-            <option value="">Selecciona una categoría</option>
-            {categorias.map((cat, i) => ( 
-              <option key={i} value={cat}>{cat}</option>
+          
+          {/* Campo de cantidad para mobiliario y material de oficina */}
+          {needsQuantity && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Cantidad
+              </label>
+              <input 
+                type="number" 
+                min="1" 
+                name="quantity" 
+                value={form.quantity} 
+                onChange={handleChange} 
+                placeholder="Cantidad (ej: 4 sillas)" 
+                className="border p-2 w-full" 
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Número de unidades de este artículo
+              </p>
+            </div>
+          )}
+          
+          <select name="category" onChange={handleChange} className="border p-2 w-full" disabled={isLoadingCategories}>
+            <option value="">
+              {isLoadingCategories ? "Cargando categorías..." : "Selecciona una categoría"}
+            </option>
+            {categories.map((cat, i) => ( 
+              <option key={cat.id || i} value={cat.name}>{cat.name}</option>
             ))}
           </select>
           <select name="status" value={form.status} onChange={handleChange} className="border p-2 w-full">

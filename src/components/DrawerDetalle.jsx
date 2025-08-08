@@ -94,6 +94,14 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
               }
             />
             
+            {/* Campo de cantidad para mobiliario y material de oficina */}
+            {asset.quantity && asset.quantity > 1 && (
+              <DetailItem
+                label="Cantidad"
+                value={`${asset.quantity} unidades`}
+              />
+            )}
+            
             {/* Información específica de EPIs */}
             {asset.category === "EPI" && (
               <>
