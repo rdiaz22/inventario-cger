@@ -25,7 +25,7 @@ const Dashboard = () => {
       asset.brand?.toLowerCase().includes(query) ||
       asset.serial_number?.toLowerCase().includes(query) ||
       asset.category?.toLowerCase().includes(query) ||
-      asset.assigned_to?.toLowerCase().includes(query)
+      (asset.assigned_to && asset.assigned_to.toLowerCase().includes(query))
     );
   });
 

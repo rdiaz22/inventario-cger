@@ -53,6 +53,16 @@ const AssetList = () => {
 
     if (epiError) console.error("Error al cargar EPIs:", epiError);
 
+    // Debug: Ver qué datos tenemos
+    console.log('📊 Datos cargados:', {
+      assetsCount: assetsData?.length || 0,
+      epiCount: epiData?.length || 0,
+      sampleAsset: assetsData?.[0],
+      sampleEpi: epiData?.[0],
+      assetsWithAssignedTo: assetsData?.filter(a => a.assigned_to)?.length || 0,
+      epiWithAssignedTo: epiData?.filter(e => e.assigned_to)?.length || 0
+    });
+
     // Combinar y formatear datos
     const normalAssets = (assetsData || []).filter(asset => 
       !asset.category || asset.category.toLowerCase() !== "epi"
@@ -81,13 +91,26 @@ const AssetList = () => {
 
   const filteredAssets = assets.filter((asset) => {
     const query = searchTerm.toLowerCase();
+    
+    // Debug: Log para ver qué datos tenemos cuando se busca "roberto"
+    if (query && query.includes('roberto')) {
+      console.log('🔍 Debug búsqueda Roberto:', {
+        query,
+        assetName: asset.name,
+        assignedTo: asset.assigned_to,
+        hasAssignedTo: !!asset.assigned_to,
+        assignedToType: typeof asset.assigned_to,
+        assignedToLower: asset.assigned_to?.toLowerCase()
+      });
+    }
+    
     const matchesSearch =
       asset.name?.toLowerCase().includes(query) ||
       asset.model?.toLowerCase().includes(query) ||
       asset.brand?.toLowerCase().includes(query) ||
       asset.serial_number?.toLowerCase().includes(query) ||
       asset.category?.toLowerCase().includes(query) ||
-      asset.assigned_to?.toLowerCase().includes(query);
+      (asset.assigned_to && asset.assigned_to.toLowerCase().includes(query));
 
     const matchesCategory = selectedCategory
       ? asset.category === selectedCategory
