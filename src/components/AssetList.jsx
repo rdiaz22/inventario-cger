@@ -60,7 +60,10 @@ const AssetList = () => {
       sampleAsset: assetsData?.[0],
       sampleEpi: epiData?.[0],
       assetsWithAssignedTo: assetsData?.filter(a => a.assigned_to)?.length || 0,
-      epiWithAssignedTo: epiData?.filter(e => e.assigned_to)?.length || 0
+      epiWithAssignedTo: epiData?.filter(e => e.assigned_to)?.length || 0,
+      // Debug específico para assigned_to
+      assetsAssignedTo: assetsData?.filter(a => a.assigned_to)?.map(a => ({ name: a.name, assigned_to: a.assigned_to })) || [],
+      epiAssignedTo: epiData?.filter(e => e.assigned_to)?.map(e => ({ name: e.name, assigned_to: e.assigned_to })) || []
     });
 
     // Combinar y formatear datos
