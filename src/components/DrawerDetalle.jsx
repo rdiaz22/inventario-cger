@@ -95,10 +95,10 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
             />
             
             {/* Campo de cantidad para mobiliario y material de oficina */}
-            {asset.quantity && asset.quantity > 1 && (
+            {asset.quantity && (
               <DetailItem
                 label="Cantidad"
-                value={`${asset.quantity} unidades`}
+                value={`${asset.quantity} ${asset.quantity === 1 ? 'unidad' : 'unidades'}`}
               />
             )}
             

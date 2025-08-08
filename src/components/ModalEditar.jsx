@@ -11,11 +11,11 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
   const isEPI = asset.category === "EPI";
 
   // Verificar si la categoría necesita campo de cantidad
-  const needsQuantity = formData.category && !isEPI && (
-    formData.category.toLowerCase().includes('mobiliario') ||
-    formData.category.toLowerCase().includes('material de oficina') ||
-    formData.category.toLowerCase().includes('material') ||
-    formData.category.toLowerCase().includes('oficina')
+  const needsQuantity = (formData.category || asset.category) && !isEPI && (
+    (formData.category || asset.category).toLowerCase().includes('mobiliario') ||
+    (formData.category || asset.category).toLowerCase().includes('material de oficina') ||
+    (formData.category || asset.category).toLowerCase().includes('material') ||
+    (formData.category || asset.category).toLowerCase().includes('oficina')
   );
 
   // Cargar datos completos del activo
@@ -414,18 +414,6 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
             name="supplier"
             placeholder="Proveedor"
             value={formData.supplier || ""}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded mb-3"
-            autoComplete="off"
-          />
-        )}
-
-        {needsQuantity && (
-          <input
-            type="number"
-            name="quantity"
-            placeholder="Cantidad"
-            value={formData.quantity || ""}
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded mb-3"
             autoComplete="off"

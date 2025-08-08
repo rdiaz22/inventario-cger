@@ -78,7 +78,7 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
   const [imageFile, setImageFile] = useState(null);
 
   // Verificar si la categoría seleccionada es EPI
-  const isEPI = form.category.toLowerCase() === "epi";
+  const isEPI = form.category && form.category.toLowerCase() === "epi";
 
   // Verificar si la categoría necesita campo de cantidad
   const needsQuantity = form.category && !isEPI && (
@@ -222,6 +222,15 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           <input type="date" value={form.fecha_garantia?.split('T')[0] || ""} name="fecha_garantia" onChange={handleChange} placeholder="Fecha de Garantía" className="border p-2 w-full" />
           <input type="number" step="0.01" name="precio_compra" onChange={handleChange} placeholder="Precio de Compra (€)" className="border p-2 w-full" />
           
+          <select name="category" onChange={handleChange} className="border p-2 w-full" disabled={isLoadingCategories}>
+            <option value="">
+              {isLoadingCategories ? "Cargando categorías..." : "Selecciona una categoría"}
+            </option>
+            {categories.map((cat, i) => ( 
+              <option key={cat.id || i} value={cat.name}>{cat.name}</option>
+            ))}
+          </select>
+          
           {/* Campo de cantidad para mobiliario y material de oficina */}
           {needsQuantity && (
             <div>
@@ -243,14 +252,6 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
             </div>
           )}
           
-          <select name="category" onChange={handleChange} className="border p-2 w-full" disabled={isLoadingCategories}>
-            <option value="">
-              {isLoadingCategories ? "Cargando categorías..." : "Selecciona una categoría"}
-            </option>
-            {categories.map((cat, i) => ( 
-              <option key={cat.id || i} value={cat.name}>{cat.name}</option>
-            ))}
-          </select>
           <select name="status" value={form.status} onChange={handleChange} className="border p-2 w-full">
             <option value="Activo">Activo</option>
             <option value="De baja">De baja</option>
