@@ -100,7 +100,8 @@ const AssetList = () => {
         assignedTo: asset.assigned_to,
         hasAssignedTo: !!asset.assigned_to,
         assignedToType: typeof asset.assigned_to,
-        assignedToLower: asset.assigned_to?.toLowerCase()
+        assignedToLower: asset.assigned_to?.toLowerCase(),
+        matchesAssignedTo: asset.assigned_to && asset.assigned_to.toLowerCase().includes(query)
       });
     }
     
