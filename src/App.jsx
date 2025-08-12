@@ -9,6 +9,7 @@ import Topbar from "./components/Topbar";
 import FichaActivo from "./components/FichaActivo";
 import CategoriasConfig from "./components/CategoriasConfig";
 import ScanPage from './components/ScanPage';
+import Configuracion from './components/Configuracion';
 import { Toaster } from 'react-hot-toast';
   
 function App() {
@@ -57,7 +58,8 @@ function App() {
           }
         />
         <Route path="/activos/:id" element={<FichaActivo />} /> 
-        <Route path="/escanear" element={<ScanPage />} />     
+        <Route path="/escanear" element={<ScanPage />} />
+        <Route path="/configuracion" element={<Configuracion />} />
       </Routes>
       <Toaster position="top-right" />  
       <CategoriasConfig 
