@@ -1,12 +1,17 @@
 import React from 'react';
-import { Package, Users, Wrench, ClipboardList, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Package, Users, Wrench, ClipboardList, TrendingUp, AlertTriangle, BarChart3, PieChart, Activity } from 'lucide-react';
 import DashboardCard from './DashboardCard';
+import MetricsChart from './MetricsChart';
+import DashboardFilters from './DashboardFilters';
+import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 
 const Home = () => {
+  const { metrics, filters, updateFilters, loadMetrics, isLoading, error } = useDashboardMetrics();
+
   const stats = [
     {
       title: "Total de Activos",
-      value: "1,247",
+      value: metrics.totalAssets.toLocaleString(),
       icon: Package,
       change: "+12%",
       changeType: "positive",
@@ -15,7 +20,7 @@ const Home = () => {
     },
     {
       title: "Usuarios Activos",
-      value: "89",
+      value: metrics.activeUsers.toLocaleString(),
       icon: Users,
       change: "+5%",
       changeType: "positive",
@@ -24,7 +29,7 @@ const Home = () => {
     },
     {
       title: "Mantenimientos Pendientes",
-      value: "23",
+      value: metrics.pendingMaintenance.toLocaleString(),
       icon: Wrench,
       change: "-8%",
       changeType: "negative",
@@ -33,7 +38,7 @@ const Home = () => {
     },
     {
       title: "Auditorías Completadas",
-      value: "156",
+      value: metrics.completedAudits.toLocaleString(),
       icon: ClipboardList,
       change: "+18%",
       changeType: "positive",
@@ -42,25 +47,31 @@ const Home = () => {
     }
   ];
 
-  const recentActivities = [
-    { id: 1, action: "Nuevo activo registrado", item: "Laptop Dell XPS 13", time: "Hace 2 horas", type: "success" },
-    { id: 2, action: "Mantenimiento programado", item: "Impresora HP LaserJet", time: "Hace 4 horas", type: "warning" },
-    { id: 3, action: "Usuario agregado", item: "María García", time: "Hace 6 horas", type: "info" },
-    { id: 4, action: "Auditoría completada", item: "Departamento IT", time: "Hace 1 día", type: "success" },
-  ];
-
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case 'success':
-        return <div className="w-2 h-2 bg-green-500 rounded-full"></div>;
-      case 'warning':
-        return <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>;
-      case 'info':
-        return <div className="w-2 h-2 bg-blue-500 rounded-full"></div>;
-      default:
-        return <div className="w-2 h-2 bg-gray-500 rounded-full"></div>;
-    }
+  const handleFilterChange = (newFilters) => {
+    updateFilters(newFilters);
   };
+
+  const handleRefresh = () => {
+    loadMetrics();
+  };
+
+  if (error) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <AlertTriangle className="h-12 w-12 text-red-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-red-800 mb-2">Error al cargar el Dashboard</h2>
+          <p className="text-red-700 mb-4">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -77,11 +88,38 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Filtros del Dashboard */}
+      <DashboardFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onRefresh={handleRefresh}
+        loading={isLoading}
+      />
+
       {/* Tarjetas de Estadísticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {stats.map((stat, index) => (
           <DashboardCard key={index} {...stat} />
         ))}
+      </div>
+
+      {/* Gráficos y Visualizaciones */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Gráfico de Activos por Categoría */}
+        <MetricsChart
+          data={metrics.assetsByCategory}
+          type="pie"
+          title="Activos por Categoría"
+          height={300}
+        />
+
+        {/* Gráfico de Crecimiento Mensual */}
+        <MetricsChart
+          data={metrics.monthlyGrowth}
+          type="line"
+          title="Crecimiento Mensual de Activos"
+          height={300}
+        />
       </div>
 
       {/* Contenido Principal */}
@@ -90,22 +128,45 @@ const Home = () => {
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base sm:text-lg font-semibold text-gray-900">Actividad Reciente</h2>
-            <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium">
+            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
               Ver todas
             </button>
           </div>
-          <div className="space-y-3 sm:space-y-4">
-            {recentActivities.map((activity) => (
-              <div key={activity.id} className="flex items-center space-x-3 p-2 sm:p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                {getActivityIcon(activity.type)}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{activity.action}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">{activity.item}</p>
+          
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                 </div>
-                <span className="text-xs text-gray-500 flex-shrink-0">{activity.time}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3 sm:space-y-4">
+              {metrics.recentActivities.length > 0 ? (
+                metrics.recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-3 p-2 sm:p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className={`w-2 h-2 rounded-full ${
+                      activity.type === 'success' ? 'bg-green-500' :
+                      activity.type === 'warning' ? 'bg-yellow-500' :
+                      activity.type === 'info' ? 'bg-blue-500' : 'bg-gray-500'
+                    }`}></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{activity.action}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 truncate">{activity.item}</p>
+                    </div>
+                    <span className="text-xs text-gray-500 flex-shrink-0">{activity.time}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Activity className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                  <p>No hay actividades recientes</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Acciones Rápidas */}
@@ -161,7 +222,7 @@ const Home = () => {
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-medium text-yellow-800 mb-1">Mantenimientos Pendientes</h3>
             <p className="text-xs sm:text-sm text-yellow-700 mb-2">
-              Tienes 23 activos que requieren mantenimiento preventivo este mes.
+              Tienes {metrics.pendingMaintenance} activos que requieren mantenimiento preventivo este mes.
             </p>
             <button className="text-xs sm:text-sm text-yellow-800 hover:text-yellow-900 font-medium">
               Ver detalles
