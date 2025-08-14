@@ -7,9 +7,10 @@ import AssetList from "./components/AssetList";
 import Login from "./components/Login";
 import Registro from "./components/Registro";
 import FichaActivo from "./components/FichaActivo";
-import CategoriasConfig from "./components/CategoriasConfig";
+import CategoriasConfig from './components/CategoriasConfig';
 import ScanPage from './components/ScanPage';
 import Configuracion from './components/Configuracion';
+import Auditorias from './components/Auditorias';
 import { Toaster } from 'react-hot-toast';
   
 function App() {
@@ -60,6 +61,7 @@ function App() {
         <Route path="/activos/:id" element={<FichaActivo />} /> 
         <Route path="/escanear" element={<ScanPage />} />
         <Route path="/configuracion" element={<Configuracion />} />
+        <Route path="/auditorias" element={<Auditorias />} />
       </Routes>
       <Toaster position="top-right" />  
       <CategoriasConfig 
