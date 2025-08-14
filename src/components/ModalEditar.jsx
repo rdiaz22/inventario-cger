@@ -11,12 +11,8 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
   const isEPI = asset.category === "EPI";
 
   // Verificar si la categoría necesita campo de cantidad
-  const needsQuantity = (formData.category || asset.category) && !isEPI && (
-    (formData.category || asset.category).toLowerCase().includes('mobiliario') ||
-    (formData.category || asset.category).toLowerCase().includes('material de oficina') ||
-    (formData.category || asset.category).toLowerCase().includes('material') ||
-    (formData.category || asset.category).toLowerCase().includes('oficina')
-  );
+  // Mostrar campo de cantidad para todos los activos que no sean EPIs
+  const needsQuantity = !isEPI;
 
   // Cargar datos completos del activo
   useEffect(() => {
@@ -251,6 +247,10 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         quantity: needsQuantity ? parseInt(formData.quantity) || 1 : 1 // Campo de cantidad
       };
 
+      console.log("Datos a actualizar:", updateData);
+      console.log("Cantidad del formulario:", formData.quantity);
+      console.log("Cantidad procesada:", updateData.quantity);
+
       const { error } = await supabase
         .from("assets")
         .update(updateData)
@@ -357,7 +357,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
           autoComplete="off"
         />
         
-        {/* Campo de cantidad para mobiliario y material de oficina */}
+        {/* Campo de cantidad para activos que no sean EPIs */}
         {needsQuantity && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -367,14 +367,14 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
               type="number"
               min="1"
               name="quantity"
-              placeholder="Cantidad (ej: 4 sillas)"
+              placeholder="Cantidad (ej: 2 teclados, 5 sillas)"
               value={formData.quantity || 1}
               onChange={handleChange}
               className="w-full border px-3 py-2 rounded mb-3"
               autoComplete="off"
             />
             <p className="text-xs text-gray-500 mb-3">
-              Número de unidades de este artículo
+              Número de unidades de este artículo en inventario
             </p>
           </div>
         )}
