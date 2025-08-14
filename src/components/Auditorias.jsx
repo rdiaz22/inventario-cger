@@ -43,12 +43,7 @@ const Auditorias = () => {
       setLoading(true);
       let query = supabase
         .from('audits')
-        .select(`
-          *,
-          auditor:auditor_id(email, user_metadata),
-          audit_results(count),
-          audit_findings(count)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       // Aplicar filtros
@@ -125,16 +120,16 @@ const Auditorias = () => {
 
   const exportAudits = () => {
     const csvContent = [
-      ['Nombre', 'Descripción', 'Estado', 'Auditor', 'Fecha Inicio', 'Fecha Fin', 'Resultados', 'Hallazgos'],
+      ['Nombre', 'Descripción', 'Estado', 'Auditor ID', 'Fecha Inicio', 'Fecha Fin', 'Creado', 'Actualizado'],
       ...audits.map(audit => [
         audit.name,
         audit.description || '',
         audit.status,
-        audit.auditor?.user_metadata?.full_name || audit.auditor?.email || '',
+        audit.auditor_id || 'No asignado',
         audit.start_date,
         audit.end_date || '',
-        audit.audit_results?.[0]?.count || 0,
-        audit.audit_findings?.[0]?.count || 0
+        new Date(audit.created_at).toLocaleDateString(),
+        new Date(audit.updated_at).toLocaleDateString()
       ])
     ].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
 
@@ -252,9 +247,9 @@ const Auditorias = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Fechas
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Progreso
-                  </th>
+                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                     Fecha Creación
+                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
@@ -275,11 +270,11 @@ const Auditorias = () => {
                         <span className="ml-1">{audit.status}</span>
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {audit.auditor?.user_metadata?.full_name || audit.auditor?.email || 'No asignado'}
-                      </div>
-                    </td>
+                                         <td className="px-6 py-4 whitespace-nowrap">
+                       <div className="text-sm text-gray-900">
+                         {audit.auditor_id || 'No asignado'}
+                       </div>
+                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         <div className="flex items-center gap-1">
@@ -293,14 +288,13 @@ const Auditorias = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        <div className="flex items-center gap-2">
-                          <span>Resultados: {audit.audit_results?.[0]?.count || 0}</span>
-                          <span>Hallazgos: {audit.audit_findings?.[0]?.count || 0}</span>
-                        </div>
-                      </div>
-                    </td>
+                                         <td className="px-6 py-4 whitespace-nowrap">
+                       <div className="text-sm text-gray-900">
+                         <div className="text-xs text-gray-500">
+                           Creado: {new Date(audit.created_at).toLocaleDateString()}
+                         </div>
+                       </div>
+                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <button
