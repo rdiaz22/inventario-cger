@@ -93,8 +93,65 @@ const ScanPage = () => {
         }
       }
     } else {
-      // Para códigos normales, determinar el tipo
-      codeInfo.type = code.length > 10 ? 'Código de barras' : 'Código QR';
+      // No es URL: intentar resolver por "codigo" en assets o epi_assets
+      try {
+        // Buscar en assets por codigo exacto
+        const { data: assetByCode, error: assetByCodeError } = await supabase
+          .from('assets')
+          .select('id, name, category, codigo')
+          .eq('codigo', code)
+          .limit(1)
+          .maybeSingle();
+
+        let resolved = false;
+        if (assetByCode && !assetByCodeError) {
+          codeInfo = {
+            ...codeInfo,
+            isProduct: true,
+            assetInfo: {
+              id: assetByCode.id,
+              name: assetByCode.name || `Activo ${assetByCode.id.slice(0, 8)}...`,
+              category: assetByCode.category || 'Sin categoría',
+              codigo: assetByCode.codigo || code,
+              type: 'Producto encontrado'
+            }
+          };
+          resolved = true;
+        }
+
+        if (!resolved) {
+          // Buscar en epi_assets por codigo exacto
+          const { data: epiByCode, error: epiByCodeError } = await supabase
+            .from('epi_assets')
+            .select('id, codigo, epi_name')
+            .eq('codigo', code)
+            .limit(1)
+            .maybeSingle();
+
+          if (epiByCode && !epiByCodeError) {
+            codeInfo = {
+              ...codeInfo,
+              isProduct: true,
+              assetInfo: {
+                id: epiByCode.id,
+                name: epiByCode.epi_name || `EPI ${epiByCode.id.slice(0, 8)}...`,
+                category: 'EPI',
+                codigo: epiByCode.codigo || code,
+                type: 'Producto encontrado'
+              }
+            };
+            resolved = true;
+          }
+        }
+
+        if (!resolved) {
+          // Para códigos no resueltos, clasificar tipo y continuar
+          codeInfo.type = code.length > 10 ? 'Código de barras' : 'Código QR';
+        }
+      } catch (e) {
+        console.error('Error al resolver código por codigo:', e);
+        codeInfo.type = code.length > 10 ? 'Código de barras' : 'Código QR';
+      }
     }
     
     setScannedCodes(prev => [codeInfo, ...prev]);
