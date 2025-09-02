@@ -32,10 +32,10 @@ async function keepDatabaseAlive() {
     }
     
     const endTime = new Date()
-    const duration = endTime - startTime
+    const durationMs = endTime - startTime
     
     console.log(`✅ Base de datos mantenida exitosamente`)
-    console.log(`📊 Consulta completada en: ${duration.getTime()}ms`)
+    console.log(`📊 Consulta completada en: ${durationMs}ms`)
     console.log(`🕐 Hora de finalización: ${endTime.toISOString()}`)
     
     // También podemos hacer un log en la base de datos si quieres
@@ -44,7 +44,7 @@ async function keepDatabaseAlive() {
         .from('system_logs')
         .insert([{
           action: 'database_keep_alive',
-          details: `Mantenimiento automático ejecutado exitosamente en ${duration.getTime()}ms`,
+          details: `Mantenimiento automático ejecutado exitosamente en ${durationMs}ms`,
           status: 'success',
           timestamp: new Date().toISOString()
         }])
