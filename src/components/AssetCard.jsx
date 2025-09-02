@@ -4,6 +4,7 @@ import { FaEye, FaPrint } from "react-icons/fa";
 import QRCode from "react-qr-code";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import JsBarcode from "jsbarcode";
 import { toDataURL } from 'qrcode'; // Agregar esta importación
 
 const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
@@ -38,6 +39,62 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     pdf.text("Propiedad de CGER, La Palma", 30, 35, { align: 'center' });
 
     pdf.save(`etiqueta-${asset.codigo}.pdf`);
+  };
+
+  // Impresión específica para etiqueta DYMO 24mm x 7mm
+  const handlePrintDymo = async (e) => {
+    e.stopPropagation();
+
+    // Dimensiones de la etiqueta en mm
+    const labelWidthMm = 24;
+    const labelHeightMm = 7;
+
+    // Crear PDF con tamaño exacto de la etiqueta
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: [labelWidthMm, labelHeightMm],
+    });
+
+    // Generar código de barras Code128 en un canvas
+    const canvas = document.createElement("canvas");
+    const barcodeValue = asset.codigo || String(asset.id || "");
+
+    // Escala: generar un bitmap grande y luego ajustar en PDF para buena definición
+    JsBarcode(canvas, barcodeValue, {
+      format: "CODE128",
+      displayValue: false,
+      margin: 0,
+      height: 80, // alto en px del bitmap
+      width: 2,   // grosor de barra en px
+    });
+
+    const barcodeDataUrl = canvas.toDataURL("image/png");
+
+    // Márgenes en mm dentro de la etiqueta
+    const marginX = 1.0;
+    const marginY = 0.6;
+
+    // Área útil
+    const usableWidth = labelWidthMm - marginX * 2;
+    const usableHeight = labelHeightMm - marginY * 2;
+
+    // Añadir barcode ocupando casi toda el área útil
+    pdf.addImage(
+      barcodeDataUrl,
+      "PNG",
+      marginX,
+      marginY,
+      usableWidth,
+      usableHeight * 0.7
+    );
+
+    // Texto pequeño con el código centrado debajo
+    pdf.setFontSize(3.5);
+    pdf.setFont(undefined, "bold");
+    pdf.text(barcodeValue, labelWidthMm / 2, labelHeightMm - 0.9, { align: "center" });
+
+    pdf.save(`dymo-${barcodeValue}.pdf`);
   };
 
   return (
@@ -79,6 +136,13 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
         >
           <FaPrint />
           Imprimir
+        </button>
+        <button
+          onClick={handlePrintDymo}
+          className="text-sm text-purple-600 hover:underline flex items-center gap-1 whitespace-nowrap"
+        >
+          <FaPrint />
+          DYMO 24x7 mm
         </button>
       </div>
 
