@@ -26,7 +26,10 @@ export const useDashboardMetrics = () => {
         .from('epi_assets')
         .select('*', { count: 'exact', head: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching total assets:', error);
+        return 0;
+      }
       return count || 0;
     } catch (error) {
       console.error('Error fetching total assets:', error);
@@ -42,7 +45,10 @@ export const useDashboardMetrics = () => {
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching active users:', error);
+        return 0;
+      }
       return count || 0;
     } catch (error) {
       console.error('Error fetching active users:', error);
@@ -55,19 +61,16 @@ export const useDashboardMetrics = () => {
     try {
       const { data, error } = await supabase
         .from('epi_assets')
-        .select(`
-          id,
-          epi_sizes!inner (
-            id,
-            name
-          )
-        `);
+        .select('category');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching assets by category:', error);
+        return [];
+      }
 
       // Agrupar por categoría
       const categoryCount = data.reduce((acc, asset) => {
-        const categoryName = asset.epi_sizes?.name || 'Sin categoría';
+        const categoryName = asset.category || 'Sin categoría';
         acc[categoryName] = (acc[categoryName] || 0) + 1;
         return acc;
       }, {});
@@ -92,7 +95,10 @@ export const useDashboardMetrics = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching recent activities:', error);
+        return [];
+      }
 
       return data.map(log => ({
         id: log.id,
@@ -116,7 +122,10 @@ export const useDashboardMetrics = () => {
         .select('id, last_maintenance_date, maintenance_frequency')
         .not('maintenance_frequency', 'is', null);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching pending maintenance:', error);
+        return 0;
+      }
 
       const now = new Date();
       const pendingCount = data.filter(asset => {
@@ -144,7 +153,10 @@ export const useDashboardMetrics = () => {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'Completada');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching completed audits:', error);
+        return 0;
+      }
       return count || 0;
     } catch (error) {
       console.error('Error fetching completed audits:', error);
@@ -160,7 +172,10 @@ export const useDashboardMetrics = () => {
         .select('created_at')
         .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString());
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching monthly growth:', error);
+        return [];
+      }
 
       // Agrupar por mes
       const monthlyData = data.reduce((acc, asset) => {
