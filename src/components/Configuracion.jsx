@@ -15,6 +15,8 @@ import {
 import toast from "react-hot-toast";
 import UserManagement from "./UserManagement";
 import ConfiguracionEmpresa from "./ConfiguracionEmpresa";
+import AdvancedRoleManagement from "./AdvancedRoleManagement";
+import ConfigAuditLog from "./ConfigAuditLog";
 
 const Configuracion = () => {
   const [activeTab, setActiveTab] = useState("empresa");
@@ -62,7 +64,19 @@ const Configuracion = () => {
       id: "usuarios",
       name: "Usuarios y Roles",
       icon: <Users className="h-5 w-5" />,
-      component: <ConfiguracionUsuarios />
+      component: <UserManagement />
+    },
+    {
+      id: "roles-avanzados",
+      name: "Roles Avanzados",
+      icon: <Shield className="h-5 w-5" />,
+      component: <AdvancedRoleManagement />
+    },
+    {
+      id: "audit-log",
+      name: "Log de Auditoría",
+      icon: <Activity className="h-5 w-5" />,
+      component: <ConfigAuditLog />
     },
     {
       id: "notificaciones",
@@ -98,6 +112,10 @@ const Configuracion = () => {
         return hasPermission("company_config") || hasPermission("all");
       case "usuarios":
         return hasPermission("users") || hasPermission("all");
+      case "roles-avanzados":
+        return hasPermission("users") || hasPermission("all");
+      case "audit-log":
+        return hasPermission("logs") || hasPermission("all");
       case "notificaciones":
         return hasPermission("notifications") || hasPermission("all");
       case "sistema":

@@ -107,6 +107,51 @@ export const useDashboardMetrics = () => {
     }
   };
 
+  // Obtener mantenimientos pendientes
+  const fetchPendingMaintenance = async () => {
+    try {
+      // Buscar activos que necesiten mantenimiento basado en fecha de último mantenimiento
+      const { data, error } = await supabase
+        .from('epi_assets')
+        .select('id, last_maintenance_date, maintenance_frequency')
+        .not('maintenance_frequency', 'is', null);
+
+      if (error) throw error;
+
+      const now = new Date();
+      const pendingCount = data.filter(asset => {
+        if (!asset.last_maintenance_date) return true; // Sin mantenimiento previo
+        
+        const lastMaintenance = new Date(asset.last_maintenance_date);
+        const frequencyDays = asset.maintenance_frequency || 90; // Default 90 días
+        const nextMaintenance = new Date(lastMaintenance.getTime() + (frequencyDays * 24 * 60 * 60 * 1000));
+        
+        return nextMaintenance <= now;
+      }).length;
+
+      return pendingCount;
+    } catch (error) {
+      console.error('Error fetching pending maintenance:', error);
+      return 0;
+    }
+  };
+
+  // Obtener auditorías completadas
+  const fetchCompletedAudits = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('audits')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Completada');
+
+      if (error) throw error;
+      return count || 0;
+    } catch (error) {
+      console.error('Error fetching completed audits:', error);
+      return 0;
+    }
+  };
+
   // Obtener crecimiento mensual
   const fetchMonthlyGrowth = async () => {
     try {
@@ -162,12 +207,16 @@ export const useDashboardMetrics = () => {
       const [
         totalAssets,
         activeUsers,
+        pendingMaintenance,
+        completedAudits,
         assetsByCategory,
         recentActivities,
         monthlyGrowth
       ] = await Promise.all([
         fetchTotalAssets(),
         fetchActiveUsers(),
+        fetchPendingMaintenance(),
+        fetchCompletedAudits(),
         fetchAssetsByCategory(),
         fetchRecentActivities(),
         fetchMonthlyGrowth()
@@ -176,8 +225,8 @@ export const useDashboardMetrics = () => {
       setMetrics({
         totalAssets,
         activeUsers,
-        pendingMaintenance: Math.floor(Math.random() * 50) + 10, // Placeholder por ahora
-        completedAudits: Math.floor(Math.random() * 200) + 100, // Placeholder por ahora
+        pendingMaintenance,
+        completedAudits,
         assetsByCategory,
         recentActivities,
         monthlyGrowth,
