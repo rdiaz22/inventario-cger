@@ -142,33 +142,17 @@ const UserManagement = () => {
     if (!password) return;
 
     try {
-      // Crear usuario en auth.users con contraseña usando Edge Function
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/create-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        },
-        body: JSON.stringify({
-          email: user.email,
-          password: password,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          phone: user.phone,
-          department: user.department,
-          position: user.position,
-          role_id: user.role_id,
-          existing_user_id: user.id // Para usuarios existentes
-        })
+      // Crear usuario en auth.users con contraseña usando función SQL
+      const { error } = await supabase.rpc('create_auth_user', {
+        user_id: user.id,
+        user_email: user.email,
+        user_password: password
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success(`Contraseña asignada para ${user.first_name} ${user.last_name}`);
+      if (error) {
+        toast.error("Error al asignar contraseña: " + error.message);
       } else {
-        toast.error("Error al asignar contraseña: " + result.error);
+        toast.success(`Contraseña asignada para ${user.first_name} ${user.last_name}`);
       }
     } catch (error) {
       toast.error("Error inesperado: " + error.message);
