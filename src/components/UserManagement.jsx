@@ -40,7 +40,6 @@ const UserManagement = () => {
           email,
           first_name,
           last_name,
-          full_name,
           phone,
           department,
           position,
@@ -83,21 +82,34 @@ const UserManagement = () => {
           fetchUsersAndRoles();
         }
       } else {
-        // Crear nuevo usuario - versión simplificada
-        const { error: systemError } = await supabase
-          .from("system_users")
-          .insert([{
-            id: crypto.randomUUID(), // Generar UUID temporal
-            ...formData
-          }]);
+        // Crear nuevo usuario usando Edge Function
+        const response = await fetch('/api/v1/create-user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: 'TempPassword123!', // Contraseña temporal
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            phone: formData.phone || null,
+            department: formData.department || null,
+            position: formData.position || null,
+            role_id: formData.role_id || null
+          })
+        });
 
-        if (systemError) {
-          toast.error("Error al crear usuario: " + systemError.message);
-        } else {
-          toast.success("Usuario creado exitosamente");
+        const result = await response.json();
+
+        if (result.success) {
+          toast.success("Usuario creado exitosamente. Contraseña temporal: TempPassword123!");
           setShowAddUser(false);
           resetForm();
           fetchUsersAndRoles();
+        } else {
+          toast.error("Error al crear usuario: " + result.error);
         }
       }
     } catch (error) {
