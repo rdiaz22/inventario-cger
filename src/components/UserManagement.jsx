@@ -142,17 +142,22 @@ const UserManagement = () => {
     if (!password) return;
 
     try {
-      // Crear usuario en auth.users con contraseña usando función SQL
-      const { error } = await supabase.rpc('create_auth_user', {
-        user_id: user.id,
-        user_email: user.email,
-        user_password: password
+      // Usar el mismo método que el registro: supabase.auth.signUp()
+      const { data, error } = await supabase.auth.signUp({
+        email: user.email,
+        password: password,
+        options: {
+          data: {
+            nombre: user.first_name,
+            apellido: user.last_name,
+          }
+        }
       });
 
       if (error) {
         toast.error("Error al asignar contraseña: " + error.message);
       } else {
-        toast.success(`Contraseña asignada para ${user.first_name} ${user.last_name}`);
+        toast.success(`Contraseña asignada para ${user.first_name} ${user.last_name}. El usuario puede hacer login ahora.`);
       }
     } catch (error) {
       toast.error("Error inesperado: " + error.message);
