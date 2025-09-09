@@ -36,8 +36,18 @@ const UserManagement = () => {
     try {
       const [usersResponse, rolesResponse] = await Promise.all([
         supabase.from("system_users").select(`
-          *,
-          user_roles(name, description)
+          id,
+          email,
+          first_name,
+          last_name,
+          full_name,
+          phone,
+          department,
+          position,
+          role_id,
+          is_active,
+          created_at,
+          updated_at
         `),
         supabase.from("user_roles").select("*")
       ]);

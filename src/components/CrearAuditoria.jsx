@@ -34,9 +34,11 @@ const CrearAuditoria = ({ isOpen, onClose, onCreated }) => {
           .from('system_users')
           .select(`
             id,
+            email,
             first_name,
             last_name,
-            user:auth.users(email, user_metadata)
+            full_name,
+            is_active
           `)
           .eq('is_active', true);
 
@@ -45,8 +47,8 @@ const CrearAuditoria = ({ isOpen, onClose, onCreated }) => {
         // Formatear usuarios para el select
         const formattedUsers = systemUsers.map(su => ({
           id: su.id,
-          name: `${su.first_name || ''} ${su.last_name || ''}`.trim() || su.user?.email || 'Usuario sin nombre',
-          email: su.user?.email
+          name: `${su.first_name || ''} ${su.last_name || ''}`.trim() || su.full_name || su.email || 'Usuario sin nombre',
+          email: su.email
         }));
 
         setUsers(formattedUsers);
