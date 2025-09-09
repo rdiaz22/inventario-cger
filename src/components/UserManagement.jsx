@@ -82,34 +82,30 @@ const UserManagement = () => {
           fetchUsersAndRoles();
         }
       } else {
-        // Crear nuevo usuario usando Edge Function
-        const response = await fetch('/api/v1/create-user', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-          },
-          body: JSON.stringify({
-            email: formData.email,
-            password: 'TempPassword123!', // Contraseña temporal
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            phone: formData.phone || null,
-            department: formData.department || null,
-            position: formData.position || null,
-            role_id: formData.role_id || null
-          })
-        });
+        // Crear nuevo usuario directamente en system_users (sin contraseña por ahora)
+        const userData = {
+          id: crypto.randomUUID(),
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone: formData.phone || null,
+          department: formData.department || null,
+          position: formData.position || null,
+          role_id: formData.role_id || null,
+          is_active: formData.is_active
+        };
+        
+        const { error: systemError } = await supabase
+          .from("system_users")
+          .insert([userData]);
 
-        const result = await response.json();
-
-        if (result.success) {
-          toast.success("Usuario creado exitosamente. Contraseña temporal: TempPassword123!");
+        if (systemError) {
+          toast.error("Error al crear usuario: " + systemError.message);
+        } else {
+          toast.success("Usuario creado exitosamente (sin contraseña - solo para gestión)");
           setShowAddUser(false);
           resetForm();
           fetchUsersAndRoles();
-        } else {
-          toast.error("Error al crear usuario: " + result.error);
         }
       }
     } catch (error) {
