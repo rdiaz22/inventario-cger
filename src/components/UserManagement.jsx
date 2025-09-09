@@ -54,7 +54,13 @@ const UserManagement = () => {
       if (usersResponse.error) console.error("Error al cargar usuarios:", usersResponse.error);
       if (rolesResponse.error) console.error("Error al cargar roles:", rolesResponse.error);
 
-      setUsers(usersResponse.data || []);
+      // Combinar usuarios con nombres de roles
+      const usersWithRoles = (usersResponse.data || []).map(user => ({
+        ...user,
+        role_name: rolesResponse.data?.find(role => role.id === user.role_id)?.name || 'Sin rol'
+      }));
+
+      setUsers(usersWithRoles);
       setRoles(rolesResponse.data || []);
     } catch (error) {
       console.error("Error:", error);
@@ -129,6 +135,44 @@ const UserManagement = () => {
       is_active: user.is_active
     });
     setShowAddUser(true);
+  };
+
+  const handleAssignPassword = async (user) => {
+    const password = prompt(`Asignar contraseña para ${user.first_name} ${user.last_name}:`);
+    if (!password) return;
+
+    try {
+      // Crear usuario en auth.users con contraseña usando Edge Function
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          email: user.email,
+          password: password,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          phone: user.phone,
+          department: user.department,
+          position: user.position,
+          role_id: user.role_id,
+          existing_user_id: user.id // Para usuarios existentes
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(`Contraseña asignada para ${user.first_name} ${user.last_name}`);
+      } else {
+        toast.error("Error al asignar contraseña: " + result.error);
+      }
+    } catch (error) {
+      toast.error("Error inesperado: " + error.message);
+    }
   };
 
   const handleDelete = async (userId) => {
@@ -248,7 +292,7 @@ const UserManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {user.user_roles?.name || 'Sin rol'}
+                      {user.role_name}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -272,6 +316,13 @@ const UserManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleAssignPassword(user)}
+                        className="text-green-600 hover:text-green-900"
+                        title="Asignar contraseña"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => handleEdit(user)}
                         className="text-indigo-600 hover:text-indigo-900"
