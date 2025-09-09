@@ -138,37 +138,10 @@ const UserManagement = () => {
   };
 
   const handleAssignPassword = async (user) => {
-    const password = prompt(`Asignar contraseña para ${user.first_name} ${user.last_name}:`);
-    if (!password) return;
-
-    try {
-      // Primero verificar si el usuario ya existe en auth.users
-      const { data: existingUser } = await supabase.auth.getUser();
-      
-      // Intentar crear usuario con signUp (fallará si ya existe)
-      const { data, error } = await supabase.auth.signUp({
-        email: user.email,
-        password: password,
-        options: {
-          data: {
-            nombre: user.first_name,
-            apellido: user.last_name,
-          }
-        }
-      });
-
-      if (error) {
-        if (error.message.includes('already registered') || error.message.includes('already exists')) {
-          toast.success(`El usuario ${user.first_name} ${user.last_name} ya tiene una cuenta activa. Puede hacer login con su contraseña.`);
-        } else {
-          toast.error("Error al asignar contraseña: " + error.message);
-        }
-      } else {
-        toast.success(`Contraseña asignada para ${user.first_name} ${user.last_name}. El usuario puede hacer login ahora.`);
-      }
-    } catch (error) {
-      toast.error("Error inesperado: " + error.message);
-    }
+    // Redirigir a la página de registro con datos pre-llenados
+    const registrationUrl = `/registro?email=${encodeURIComponent(user.email)}&nombre=${encodeURIComponent(user.first_name)}&apellido=${encodeURIComponent(user.last_name)}`;
+    window.open(registrationUrl, '_blank');
+    toast.success(`Redirigiendo a registro para ${user.first_name} ${user.last_name}. Completa el formulario con la contraseña deseada.`);
   };
 
   const handleDelete = async (userId) => {

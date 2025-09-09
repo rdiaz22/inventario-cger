@@ -1,15 +1,16 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import logo from "../assets/logo_inventario_app.png";
 
 const Registro = () => {
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({ 
-    email: "", 
+    email: searchParams.get('email') || "", 
     password: "", 
     confirmPassword: "",
-    nombre: "",
-    apellido: ""
+    nombre: searchParams.get('nombre') || "",
+    apellido: searchParams.get('apellido') || ""
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
