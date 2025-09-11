@@ -224,9 +224,9 @@ const Home = () => {
             <p className="text-xs sm:text-sm text-yellow-700 mb-2">
               Tienes {metrics.pendingMaintenance} activos que requieren mantenimiento preventivo este mes.
             </p>
-            <button className="text-xs sm:text-sm text-yellow-800 hover:text-yellow-900 font-medium">
-              Ver detalles
-            </button>
+            <a href="/mantenimiento" className="text-xs sm:text-sm text-yellow-800 hover:text-yellow-900 font-medium">
+              Ir a mantenimiento
+            </a>
           </div>
         </div>
       </div>

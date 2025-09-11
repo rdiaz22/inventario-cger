@@ -12,6 +12,7 @@ import ScanPage from './components/ScanPage';
 import Configuracion from './components/Configuracion';
 import Auditorias from './components/Auditorias';
 import { Toaster } from 'react-hot-toast';
+import Mantenimiento from './components/Mantenimiento';
   
 function App() {
   const [session, setSession] = useState(null);
@@ -62,6 +63,11 @@ function App() {
         <Route path="/escanear" element={<ScanPage />} />
         <Route path="/configuracion" element={<Configuracion />} />
         <Route path="/auditorias" element={<Auditorias />} />
+        <Route path="/mantenimiento" element={
+          <Layout onCategoriasClick={() => setIsCategoriasModalOpen(true)}>
+            <Mantenimiento />
+          </Layout>
+        } />
       </Routes>
       <Toaster position="top-right" />  
       <CategoriasConfig 
