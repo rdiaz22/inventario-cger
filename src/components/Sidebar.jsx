@@ -48,7 +48,6 @@ const Sidebar = ({ onCategoriasClick }) => {
   const menuItems = [
     { name: "Inicio", icon: <Home className="h-4 w-4" />, path: "/" },
     { name: "Activos", icon: <Package className="h-4 w-4" />, path: "/activos" },
-    { name: "Préstamos", icon: <CalendarCheck size={18} />, path: "/prestamos" },
     { name: "Mantenimiento", icon: <Wrench size={18} />, path: "/mantenimiento" },
     { name: "Auditorías", icon: <ClipboardList size={18} />, path: "/auditorias" },
     { name: "Configuración", icon: <Settings className="h-4 w-4" />, path: "/configuracion" },
