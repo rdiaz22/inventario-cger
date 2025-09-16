@@ -4,8 +4,6 @@ import {
   UserPlus, 
   Edit, 
   Trash2, 
-  Eye, 
-  EyeOff,
   CheckCircle,
   XCircle
 } from "lucide-react";
@@ -25,7 +23,9 @@ const UserManagement = () => {
     department: "",
     position: "",
     role_id: "",
-    is_active: true
+    is_active: true,
+    password: "",
+    confirmPassword: ""
   });
 
   useEffect(() => {
@@ -88,27 +88,36 @@ const UserManagement = () => {
           fetchUsersAndRoles();
         }
       } else {
-        // Crear nuevo usuario directamente en system_users (sin contraseña por ahora)
-        const userData = {
-          id: crypto.randomUUID(),
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          phone: formData.phone || null,
-          department: formData.department || null,
-          position: formData.position || null,
-          role_id: formData.role_id || null,
-          is_active: formData.is_active
-        };
-        
-        const { error: systemError } = await supabase
-          .from("system_users")
-          .insert([userData]);
+        // Validaciones para creación con contraseña
+        if (!formData.password || formData.password.length < 6) {
+          toast.error("La contraseña debe tener al menos 6 caracteres");
+          return;
+        }
+        if (formData.password !== formData.confirmPassword) {
+          toast.error("Las contraseñas no coinciden");
+          return;
+        }
 
-        if (systemError) {
-          toast.error("Error al crear usuario: " + systemError.message);
+        // Crear usuario mediante Edge Function para sincronizar auth.users y system_users
+        const { data, error } = await supabase.functions.invoke('create-user', {
+          body: {
+            email: formData.email,
+            password: formData.password,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            phone: formData.phone || null,
+            department: formData.department || null,
+            position: formData.position || null,
+            role_id: formData.role_id || null
+          }
+        });
+
+        if (error) {
+          toast.error("Error al crear usuario: " + error.message);
+        } else if (data?.success === false) {
+          toast.error("Error al crear usuario: " + (data?.error || 'Desconocido'));
         } else {
-          toast.success("Usuario creado exitosamente (sin contraseña - solo para gestión)");
+          toast.success("Usuario creado exitosamente");
           setShowAddUser(false);
           resetForm();
           fetchUsersAndRoles();
@@ -137,12 +146,7 @@ const UserManagement = () => {
     setShowAddUser(true);
   };
 
-  const handleAssignPassword = async (user) => {
-    // Redirigir a la página de registro con datos pre-llenados
-    const registrationUrl = `/registro?email=${encodeURIComponent(user.email)}&nombre=${encodeURIComponent(user.first_name)}&apellido=${encodeURIComponent(user.last_name)}`;
-    window.open(registrationUrl, '_blank');
-    toast.success(`Redirigiendo a registro para ${user.first_name} ${user.last_name}. Completa el formulario con la contraseña deseada.`);
-  };
+  
 
   const handleDelete = async (userId) => {
     if (!confirm("¿Estás seguro de que quieres eliminar este usuario?")) {
@@ -176,7 +180,9 @@ const UserManagement = () => {
       department: "",
       position: "",
       role_id: "",
-      is_active: true
+      is_active: true,
+      password: "",
+      confirmPassword: ""
     });
     setEditingUser(null);
   };
@@ -285,13 +291,6 @@ const UserManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleAssignPassword(user)}
-                        className="text-green-600 hover:text-green-900"
-                        title="Asignar contraseña"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
                       <button
                         onClick={() => handleEdit(user)}
                         className="text-indigo-600 hover:text-indigo-900"
@@ -449,6 +448,39 @@ const UserManagement = () => {
                   Usuario activo
                 </label>
               </div>
+
+              {!editingUser && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contraseña *
+                    </label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Confirmar contraseña *
+                    </label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="flex gap-3 pt-4">
                 <button
