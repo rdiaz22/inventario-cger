@@ -40,22 +40,26 @@ const Registro = () => {
     }
 
     try {
-      // Crear usuario en Supabase
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            nombre: formData.nombre,
-            apellido: formData.apellido,
-          }
+      // Crear usuario a través de Edge Function para sincronizar auth.users y system_users
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: formData.email,
+          password: formData.password,
+          first_name: formData.nombre,
+          last_name: formData.apellido,
+          phone: null,
+          department: null,
+          position: null,
+          role_id: null
         }
       });
 
       if (error) {
         setError(error.message);
+      } else if (data?.success === false) {
+        setError(data?.error || 'Error al crear el usuario');
       } else {
-        setSuccess("¡Usuario creado exitosamente! Revisa tu correo para confirmar tu cuenta.");
+        setSuccess("¡Usuario creado exitosamente! Ya puedes iniciar sesión.");
         setFormData({ email: "", password: "", confirmPassword: "", nombre: "", apellido: "" });
       }
     } catch (error) {
