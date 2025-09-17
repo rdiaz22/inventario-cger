@@ -10,6 +10,7 @@ import { toDataURL } from 'qrcode'; // Agregar esta importación
 const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   // const navigate = useNavigate(); // Eliminar esta línea
   const [showQR, setShowQR] = useState(false);
+  const [dymoHeightMm, setDymoHeightMm] = useState(12); // altura configurable: 7, 12, 18
 
   // Eliminar handleCardClick
 
@@ -41,13 +42,13 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     pdf.save(`etiqueta-${asset.codigo}.pdf`);
   };
 
-  // Impresión específica para etiqueta DYMO 24mm x 7mm
+  // Impresión específica para etiqueta DYMO 24mm x H mm
   const handlePrintDymo = async (e) => {
     e.stopPropagation();
 
     // Dimensiones de la etiqueta en mm
     const labelWidthMm = 24;
-    const labelHeightMm = 7;
+    const labelHeightMm = Number(dymoHeightMm || 12);
 
     // Crear PDF con tamaño exacto de la etiqueta
     const pdf = new jsPDF({
@@ -71,9 +72,9 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
 
     const barcodeDataUrl = canvas.toDataURL("image/png");
 
-    // Márgenes en mm dentro de la etiqueta
-    const marginX = 1.0;
-    const marginY = 0.6;
+    // Márgenes en mm dentro de la etiqueta (ligeramente mayores para alturas más grandes)
+    const marginX = labelHeightMm >= 12 ? 1.2 : 1.0;
+    const marginY = labelHeightMm >= 12 ? 0.8 : 0.6;
 
     // Área útil
     const usableWidth = labelWidthMm - marginX * 2;
@@ -89,10 +90,11 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       usableHeight * 0.7
     );
 
-    // Texto pequeño con el código centrado debajo
-    pdf.setFontSize(3.5);
+    // Texto con tamaño proporcional a la altura
+    const textSize = labelHeightMm >= 18 ? 4.5 : labelHeightMm >= 12 ? 4.0 : 3.5;
+    pdf.setFontSize(textSize);
     pdf.setFont(undefined, "bold");
-    pdf.text(barcodeValue, labelWidthMm / 2, labelHeightMm - 0.9, { align: "center" });
+    pdf.text(barcodeValue, labelWidthMm / 2, labelHeightMm - (labelHeightMm >= 12 ? 1.1 : 0.9), { align: "center" });
 
     pdf.save(`dymo-${barcodeValue}.pdf`);
   };
@@ -137,12 +139,25 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
           <FaPrint />
           Imprimir
         </button>
+        {/* Selector de tamaño para DYMO */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600">Alto etiqueta:</span>
+          <select
+            value={dymoHeightMm}
+            onChange={(e) => setDymoHeightMm(Number(e.target.value))}
+            className="text-xs border rounded px-1 py-0.5"
+          >
+            <option value={7}>7 mm</option>
+            <option value={12}>12 mm</option>
+            <option value={18}>18 mm</option>
+          </select>
+        </div>
         <button
           onClick={handlePrintDymo}
           className="text-sm text-purple-600 hover:underline flex items-center gap-1 whitespace-nowrap"
         >
           <FaPrint />
-          DYMO 24x7 mm
+          DYMO 24x{dymoHeightMm} mm
         </button>
       </div>
 
