@@ -65,9 +65,11 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     JsBarcode(canvas, barcodeValue, {
       format: "CODE128",
       displayValue: false,
-      margin: 0,
-      height: 80, // alto en px del bitmap
-      width: 2,   // grosor de barra en px
+      // Mayor "quiet zone" para mejorar lectura con cámara
+      margin: 6,
+      // Más alto y barras ligeramente más finas para mejorar contraste/espaciado percibido
+      height: 90,
+      width: 1.6,
     });
 
     const barcodeDataUrl = canvas.toDataURL("image/png");
@@ -87,14 +89,19 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       marginX,
       marginY,
       usableWidth,
-      usableHeight * 0.7
+      usableHeight * 0.8
     );
 
-    // Texto con tamaño proporcional a la altura
+    // Texto con tamaño proporcional a la altura (más cerca de las barras)
     const textSize = labelHeightMm >= 18 ? 4.5 : labelHeightMm >= 12 ? 4.0 : 3.5;
     pdf.setFontSize(textSize);
     pdf.setFont(undefined, "bold");
-    pdf.text(barcodeValue, labelWidthMm / 2, labelHeightMm - (labelHeightMm >= 12 ? 1.1 : 0.9), { align: "center" });
+    pdf.text(
+      barcodeValue,
+      labelWidthMm / 2,
+      labelHeightMm - (labelHeightMm >= 12 ? 0.6 : 0.5),
+      { align: "center" }
+    );
 
     pdf.save(`dymo-${barcodeValue}.pdf`);
   };
