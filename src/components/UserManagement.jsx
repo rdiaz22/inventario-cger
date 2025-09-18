@@ -154,17 +154,19 @@ const UserManagement = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from("system_users")
-        .delete()
-        .eq("id", userId);
+      // Usar Edge Function para eliminar de auth.users y system_users
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: userId }
+      });
 
-      if (error) {
-        toast.error("Error al eliminar usuario: " + error.message);
-      } else {
-        toast.success("Usuario eliminado exitosamente");
-        fetchUsersAndRoles();
+      if (error || data?.success === false) {
+        const message = error?.message || data?.error || 'Error desconocido';
+        toast.error("Error al eliminar usuario: " + message);
+        return;
       }
+
+      toast.success("Usuario eliminado exitosamente");
+      fetchUsersAndRoles();
     } catch (error) {
       console.error("Error:", error);
       toast.error("Error inesperado");

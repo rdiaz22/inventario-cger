@@ -45,6 +45,7 @@ const Login = () => {
             onChange={handleChange}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4"
             required
+            autoComplete="username"
           />
 
           <label className="block mb-2 text-sm font-medium">Contraseña</label>
@@ -55,6 +56,7 @@ const Login = () => {
             onChange={handleChange}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6"
             required
+            autoComplete="current-password"
           />
 
           <button

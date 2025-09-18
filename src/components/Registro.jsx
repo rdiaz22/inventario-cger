@@ -114,6 +114,7 @@ const Registro = () => {
             onChange={handleChange}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4"
             required
+            autoComplete="email"
           />
 
           <label className="block mb-2 text-sm font-medium">Contraseña</label>
@@ -125,6 +126,7 @@ const Registro = () => {
             className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4"
             required
             minLength={6}
+            autoComplete="new-password"
           />
 
           <label className="block mb-2 text-sm font-medium">Confirmar contraseña</label>
@@ -135,6 +137,7 @@ const Registro = () => {
             onChange={handleChange}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6"
             required
+            autoComplete="new-password"
           />
 
           <button
