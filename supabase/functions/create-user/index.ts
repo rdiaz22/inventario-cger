@@ -26,7 +26,23 @@ serve(async (req) => {
       }
     )
 
-    const { email, password, first_name, last_name, phone, department, position, role_id } = await req.json()
+    const payload = await req.json()
+    const { email, password, first_name, last_name, phone, department, position } = payload
+
+    // Determinar rol por defecto si no se envía
+    let role_id: string | null = null
+    if (payload?.role_id) {
+      role_id = payload.role_id
+    } else {
+      const { data: defaultRole, error: defaultRoleError } = await supabaseAdmin
+        .from('user_roles')
+        .select('id, name')
+        .eq('name', 'user')
+        .single()
+      if (!defaultRoleError && defaultRole?.id) {
+        role_id = defaultRole.id
+      }
+    }
 
     // 1. Create user in auth.users
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
