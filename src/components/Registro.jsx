@@ -40,10 +40,11 @@ const Registro = () => {
     }
 
     try {
+      const normalizedEmail = (formData.email || "").trim().toLowerCase();
       // Crear usuario a través de Edge Function para sincronizar auth.users y system_users
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
-          email: formData.email,
+          email: normalizedEmail,
           password: formData.password,
           first_name: formData.nombre,
           last_name: formData.apellido,
@@ -55,14 +56,26 @@ const Registro = () => {
       });
 
       if (error) {
+        if (import.meta?.env?.DEV) {
+          // eslint-disable-next-line no-console
+          console.error('Register invoke error:', error);
+        }
         setError(error.message);
       } else if (data?.success === false) {
+        if (import.meta?.env?.DEV) {
+          // eslint-disable-next-line no-console
+          console.error('Register function response error:', data);
+        }
         setError(data?.error || 'Error al crear el usuario');
       } else {
         setSuccess("¡Usuario creado exitosamente! Ya puedes iniciar sesión.");
         setFormData({ email: "", password: "", confirmPassword: "", nombre: "", apellido: "" });
       }
     } catch (error) {
+      if (import.meta?.env?.DEV) {
+        // eslint-disable-next-line no-console
+        console.error('Register unexpected error:', error);
+      }
       setError("Error al crear el usuario. Inténtalo de nuevo.");
     } finally {
       setLoading(false);

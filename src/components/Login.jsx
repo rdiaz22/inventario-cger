@@ -15,12 +15,18 @@ const Login = () => {
     e.preventDefault();
     setError("");
 
+    const normalizedEmail = (formData.email || "").trim().toLowerCase();
     const { error } = await supabase.auth.signInWithPassword({
-      email: formData.email,
+      email: normalizedEmail,
       password: formData.password,
     });
 
     if (error) {
+      if (import.meta?.env?.DEV) {
+        // Log detallado solo en desarrollo
+        // eslint-disable-next-line no-console
+        console.error("Login error:", error);
+      }
       setError("Correo o contraseña incorrectos.");
     } else {
       // Redirigir manualmente a la vista principal
