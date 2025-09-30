@@ -55,18 +55,30 @@ const Registro = () => {
         }
       });
 
+      const pickNiceError = (rawMessage) => {
+        if (!rawMessage) return 'Error al crear el usuario';
+        const lower = rawMessage.toLowerCase();
+        if (lower.includes('already') && lower.includes('registered')) {
+          return 'El correo ya está registrado.';
+        }
+        if (lower.includes('password')) {
+          return 'La contraseña no es válida.';
+        }
+        return rawMessage;
+      };
+
       if (error) {
         if (import.meta?.env?.DEV) {
           // eslint-disable-next-line no-console
           console.error('Register invoke error:', error);
         }
-        setError(error.message);
+        setError(pickNiceError(error.message));
       } else if (data?.success === false) {
         if (import.meta?.env?.DEV) {
           // eslint-disable-next-line no-console
           console.error('Register function response error:', data);
         }
-        setError(data?.error || 'Error al crear el usuario');
+        setError(pickNiceError(data?.error));
       } else {
         setSuccess("¡Usuario creado exitosamente! Ya puedes iniciar sesión.");
         setFormData({ email: "", password: "", confirmPassword: "", nombre: "", apellido: "" });

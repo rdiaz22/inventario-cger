@@ -112,10 +112,22 @@ const UserManagement = () => {
           }
         });
 
+        const pickNiceError = (rawMessage) => {
+          if (!rawMessage) return 'Error al crear el usuario';
+          const lower = rawMessage.toLowerCase();
+          if (lower.includes('already') && lower.includes('registered')) {
+            return 'El correo ya está registrado.';
+          }
+          if (lower.includes('password')) {
+            return 'La contraseña no es válida.';
+          }
+          return rawMessage;
+        };
+
         if (error) {
-          toast.error("Error al crear usuario: " + error.message);
+          toast.error("Error al crear usuario: " + pickNiceError(error.message));
         } else if (data?.success === false) {
-          toast.error("Error al crear usuario: " + (data?.error || 'Desconocido'));
+          toast.error("Error al crear usuario: " + pickNiceError(data?.error));
         } else {
           toast.success("Usuario creado exitosamente");
           setShowAddUser(false);
@@ -159,9 +171,18 @@ const UserManagement = () => {
         body: { user_id: userId }
       });
 
+      const pickNiceDeleteError = (rawMessage) => {
+        if (!rawMessage) return 'Error al eliminar el usuario';
+        const lower = rawMessage.toLowerCase();
+        if (lower.includes('permission') || lower.includes('forbidden')) {
+          return 'No tienes permisos para eliminar este usuario.';
+        }
+        return rawMessage;
+      };
+
       if (error || data?.success === false) {
         const message = error?.message || data?.error || 'Error desconocido';
-        toast.error("Error al eliminar usuario: " + message);
+        toast.error("Error al eliminar usuario: " + pickNiceDeleteError(message));
         return;
       }
 
