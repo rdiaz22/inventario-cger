@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 import Layout from "./components/Layout";
+import PublicLayout from "./components/PublicLayout";
 import Home from "./components/Home";
 import AssetList from "./components/AssetList";
 import Login from "./components/Login";
 import Registro from "./components/Registro";
 import FichaActivo from "./components/FichaActivo";
+import PublicAssetView from "./components/PublicAssetView";
 import CategoriasConfig from './components/CategoriasConfig';
 import ScanPage from './components/ScanPage';
 import Configuracion from './components/Configuracion';
@@ -32,42 +34,50 @@ function App() {
     };
   }, []);
 
-  if (!session) {
-    return (
-      <Router>
-        <Routes>
-          <Route path="/registro" element={<Registro />} />
-          <Route path="*" element={<Login />} />
-        </Routes>
-      </Router>
-    );
-  }
-
   return (
     <Router>
       <Routes>
-        <Route path="/" element={
-          <Layout onCategoriasClick={() => setIsCategoriasModalOpen(true)}>
-            <Home />
-          </Layout>
+        {/* Rutas públicas (sin autenticación) */}
+        <Route path="/activos/:id" element={
+          <PublicLayout>
+            <PublicAssetView />
+          </PublicLayout>
         } />
-        <Route
-          path="/activos"
-          element={
-            <Layout onCategoriasClick={() => setIsCategoriasModalOpen(true)}>
-              <AssetList />
-            </Layout>
-          }
-        />
-        <Route path="/activos/:id" element={<FichaActivo />} /> 
-        <Route path="/escanear" element={<ScanPage />} />
-        <Route path="/configuracion" element={<Configuracion />} />
-        <Route path="/auditorias" element={<Auditorias />} />
-        <Route path="/mantenimiento" element={
-          <Layout onCategoriasClick={() => setIsCategoriasModalOpen(true)}>
-            <Mantenimiento />
-          </Layout>
-        } />
+        
+        {/* Rutas administrativas (requieren autenticación) */}
+        {!session ? (
+          <>
+            <Route path="/admin/login" element={<Login />} />
+            <Route path="/admin/registro" element={<Registro />} />
+            <Route path="/admin/*" element={<Navigate to="/admin/login" replace />} />
+            <Route path="*" element={<Navigate to="/admin/login" replace />} />
+          </>
+        ) : (
+          <>
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard" element={
+              <Layout onCategoriasClick={() => setIsCategoriasModalOpen(true)}>
+                <Home />
+              </Layout>
+            } />
+            <Route path="/admin/activos" element={
+              <Layout onCategoriasClick={() => setIsCategoriasModalOpen(true)}>
+                <AssetList />
+              </Layout>
+            } />
+            <Route path="/admin/activos/:id" element={<FichaActivo />} />
+            <Route path="/admin/escanear" element={<ScanPage />} />
+            <Route path="/admin/configuracion" element={<Configuracion />} />
+            <Route path="/admin/auditorias" element={<Auditorias />} />
+            <Route path="/admin/mantenimiento" element={
+              <Layout onCategoriasClick={() => setIsCategoriasModalOpen(true)}>
+                <Mantenimiento />
+              </Layout>
+            } />
+            <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+          </>
+        )}
       </Routes>
       <Toaster position="top-right" />  
       <CategoriasConfig 
