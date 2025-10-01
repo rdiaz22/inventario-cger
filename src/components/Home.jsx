@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Package, Users, Wrench, ClipboardList, TrendingUp, AlertTriangle, BarChart3, PieChart, Activity } from 'lucide-react';
 import DashboardCard from './DashboardCard';
 import MetricsChart from './MetricsChart';
@@ -6,6 +7,7 @@ import DashboardFilters from './DashboardFilters';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 
 const Home = () => {
+  const navigate = useNavigate();
   const { metrics, filters, updateFilters, loadMetrics, isLoading, error } = useDashboardMetrics();
 
   const stats = [
@@ -16,7 +18,7 @@ const Home = () => {
       change: "+12%",
       changeType: "positive",
       color: "blue",
-      onClick: () => window.location.href = '/admin/activos'
+      onClick: () => navigate('/admin/activos')
     },
     {
       title: "Usuarios Activos",
@@ -25,7 +27,7 @@ const Home = () => {
       change: "+5%",
       changeType: "positive",
       color: "green",
-      onClick: () => window.location.href = '/admin/configuracion'
+      onClick: () => navigate('/admin/configuracion')
     },
     {
       title: "Mantenimientos Pendientes",
@@ -34,7 +36,7 @@ const Home = () => {
       change: "-8%",
       changeType: "negative",
       color: "orange",
-      onClick: () => window.location.href = '/admin/mantenimiento'
+      onClick: () => navigate('/admin/mantenimiento')
     },
     {
       title: "Auditorías Completadas",
@@ -43,7 +45,7 @@ const Home = () => {
       change: "+18%",
       changeType: "positive",
       color: "purple",
-      onClick: () => window.location.href = '/admin/auditorias'
+      onClick: () => navigate('/admin/auditorias')
     }
   ];
 
@@ -174,7 +176,7 @@ const Home = () => {
           <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h2>
           <div className="space-y-3">
             <button 
-              onClick={() => window.location.href = '/admin/escanear'}
+              onClick={() => navigate('/admin/escanear')}
               className="w-full flex items-center space-x-3 p-2 sm:p-3 text-left hover:bg-blue-50 rounded-lg transition-colors border border-gray-200 hover:border-blue-300"
             >
               <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
@@ -187,7 +189,7 @@ const Home = () => {
             </button>
 
             <button 
-              onClick={() => window.location.href = '/admin/activos'}
+              onClick={() => navigate('/admin/activos')}
               className="w-full flex items-center space-x-3 p-2 sm:p-3 text-left hover:bg-green-50 rounded-lg transition-colors border border-gray-200 hover:border-green-300"
             >
               <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
@@ -200,7 +202,7 @@ const Home = () => {
             </button>
 
             <button 
-              onClick={() => window.location.href = '/admin/configuracion'}
+              onClick={() => navigate('/admin/configuracion')}
               className="w-full flex items-center space-x-3 p-2 sm:p-3 text-left hover:bg-purple-50 rounded-lg transition-colors border border-gray-200 hover:border-purple-300"
             >
               <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
@@ -224,9 +226,9 @@ const Home = () => {
             <p className="text-xs sm:text-sm text-yellow-700 mb-2">
               Tienes {metrics.pendingMaintenance} activos que requieren mantenimiento preventivo este mes.
             </p>
-            <a href="/mantenimiento" className="text-xs sm:text-sm text-yellow-800 hover:text-yellow-900 font-medium">
+            <button onClick={() => navigate('/admin/mantenimiento')} className="text-xs sm:text-sm text-yellow-800 hover:text-yellow-900 font-medium">
               Ir a mantenimiento
-            </a>
+            </button>
           </div>
         </div>
       </div>

@@ -19,30 +19,25 @@ export const useDashboardMetrics = () => {
     category: 'all'
   });
 
-  // Obtener total de activos
+  // Obtener total de activos (alineado con la lista: assets SIN EPI + epi_assets)
   const fetchTotalAssets = async () => {
     try {
-      // Contar activos de ambas tablas
-      const [assetsResult, epiAssetsResult] = await Promise.all([
-        supabase
-          .from('assets')
-          .select('*', { count: 'exact', head: true }),
-        supabase
-          .from('epi_assets')
-          .select('*', { count: 'exact', head: true })
+      const [allAssetsResult, assetsEpiResult, epiAssetsResult] = await Promise.all([
+        supabase.from('assets').select('*', { count: 'exact', head: true }),
+        supabase.from('assets').select('*', { count: 'exact', head: true }).ilike('category', 'EPI'),
+        supabase.from('epi_assets').select('*', { count: 'exact', head: true })
       ]);
 
-      const assetsCount = assetsResult.count || 0;
-      const epiAssetsCount = epiAssetsResult.count || 0;
-      
-      if (assetsResult.error) {
-        console.error('Error fetching assets:', assetsResult.error);
-      }
-      if (epiAssetsResult.error) {
-        console.error('Error fetching epi_assets:', epiAssetsResult.error);
-      }
-      
-      return assetsCount + epiAssetsCount;
+      const allAssets = allAssetsResult.count || 0;
+      const assetsEpi = assetsEpiResult.count || 0;
+      const epiAssets = epiAssetsResult.count || 0;
+
+      if (allAssetsResult.error) console.error('Error fetching assets:', allAssetsResult.error);
+      if (assetsEpiResult.error) console.error('Error fetching assets EPI:', assetsEpiResult.error);
+      if (epiAssetsResult.error) console.error('Error fetching epi_assets:', epiAssetsResult.error);
+
+      // Total = (assets sin EPI) + (epi_assets)
+      return (allAssets - assetsEpi) + epiAssets;
     } catch (error) {
       console.error('Error fetching total assets:', error);
       return 0;
@@ -91,9 +86,11 @@ export const useDashboardMetrics = () => {
         console.error('Error fetching epi_assets by category:', epiAssetsResult.error);
       }
 
-      // Combinar datos de ambas tablas
+      // Combinar datos de ambas tablas (excluyendo EPI en assets)
       const allAssets = [
-        ...assetsData.map(asset => ({ category: asset.category })),
+        ...assetsData
+          .filter(a => (a.category || '').toLowerCase() !== 'epi')
+          .map(asset => ({ category: asset.category })),
         ...epiAssetsData.map(asset => ({ category: asset.category }))
       ];
 
