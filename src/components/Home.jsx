@@ -34,7 +34,7 @@ const Home = () => {
       change: "-8%",
       changeType: "negative",
       color: "orange",
-      onClick: () => window.location.href = '/mantenimiento'
+      onClick: () => window.location.href = '/admin/mantenimiento'
     },
     {
       title: "Auditorías Completadas",
@@ -43,7 +43,7 @@ const Home = () => {
       change: "+18%",
       changeType: "positive",
       color: "purple",
-      onClick: () => window.location.href = '/auditorias'
+      onClick: () => window.location.href = '/admin/auditorias'
     }
   ];
 

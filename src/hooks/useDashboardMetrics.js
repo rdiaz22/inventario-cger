@@ -22,15 +22,27 @@ export const useDashboardMetrics = () => {
   // Obtener total de activos
   const fetchTotalAssets = async () => {
     try {
-      const { count, error } = await supabase
-        .from('epi_assets')
-        .select('*', { count: 'exact', head: true });
+      // Contar activos de ambas tablas
+      const [assetsResult, epiAssetsResult] = await Promise.all([
+        supabase
+          .from('assets')
+          .select('*', { count: 'exact', head: true }),
+        supabase
+          .from('epi_assets')
+          .select('*', { count: 'exact', head: true })
+      ]);
 
-      if (error) {
-        console.error('Error fetching total assets:', error);
-        return 0;
+      const assetsCount = assetsResult.count || 0;
+      const epiAssetsCount = epiAssetsResult.count || 0;
+      
+      if (assetsResult.error) {
+        console.error('Error fetching assets:', assetsResult.error);
       }
-      return count || 0;
+      if (epiAssetsResult.error) {
+        console.error('Error fetching epi_assets:', epiAssetsResult.error);
+      }
+      
+      return assetsCount + epiAssetsCount;
     } catch (error) {
       console.error('Error fetching total assets:', error);
       return 0;
@@ -59,17 +71,34 @@ export const useDashboardMetrics = () => {
   // Obtener activos por categoría
   const fetchAssetsByCategory = async () => {
     try {
-      const { data, error } = await supabase
-        .from('epi_assets')
-        .select('category');
+      // Obtener categorías de ambas tablas
+      const [assetsResult, epiAssetsResult] = await Promise.all([
+        supabase
+          .from('assets')
+          .select('category'),
+        supabase
+          .from('epi_assets')
+          .select('category')
+      ]);
 
-      if (error) {
-        console.error('Error fetching assets by category:', error);
-        return [];
+      const assetsData = assetsResult.data || [];
+      const epiAssetsData = epiAssetsResult.data || [];
+      
+      if (assetsResult.error) {
+        console.error('Error fetching assets by category:', assetsResult.error);
+      }
+      if (epiAssetsResult.error) {
+        console.error('Error fetching epi_assets by category:', epiAssetsResult.error);
       }
 
+      // Combinar datos de ambas tablas
+      const allAssets = [
+        ...assetsData.map(asset => ({ category: asset.category })),
+        ...epiAssetsData.map(asset => ({ category: asset.category }))
+      ];
+
       // Agrupar por categoría
-      const categoryCount = data.reduce((acc, asset) => {
+      const categoryCount = allAssets.reduce((acc, asset) => {
         const categoryName = asset.category || 'Sin categoría';
         acc[categoryName] = (acc[categoryName] || 0) + 1;
         return acc;
@@ -78,7 +107,7 @@ export const useDashboardMetrics = () => {
       return Object.entries(categoryCount).map(([name, count]) => ({
         name,
         count,
-        percentage: ((count / data.length) * 100).toFixed(1)
+        percentage: ((count / allAssets.length) * 100).toFixed(1)
       }));
     } catch (error) {
       console.error('Error fetching assets by category:', error);
@@ -116,19 +145,33 @@ export const useDashboardMetrics = () => {
   // Obtener mantenimientos pendientes
   const fetchPendingMaintenance = async () => {
     try {
-      // Buscar activos que necesiten mantenimiento basado en fecha de último mantenimiento
-      const { data, error } = await supabase
-        .from('epi_assets')
-        .select('id, last_maintenance_date, maintenance_frequency')
-        .not('maintenance_frequency', 'is', null);
+      // Buscar activos que necesiten mantenimiento en ambas tablas
+      const [assetsResult, epiAssetsResult] = await Promise.all([
+        supabase
+          .from('assets')
+          .select('id, last_maintenance_date, maintenance_frequency')
+          .not('maintenance_frequency', 'is', null),
+        supabase
+          .from('epi_assets')
+          .select('id, last_maintenance_date, maintenance_frequency')
+          .not('maintenance_frequency', 'is', null)
+      ]);
 
-      if (error) {
-        console.error('Error fetching pending maintenance:', error);
-        return 0;
+      const assetsData = assetsResult.data || [];
+      const epiAssetsData = epiAssetsResult.data || [];
+      
+      if (assetsResult.error) {
+        console.error('Error fetching assets maintenance:', assetsResult.error);
+      }
+      if (epiAssetsResult.error) {
+        console.error('Error fetching epi_assets maintenance:', epiAssetsResult.error);
       }
 
+      // Combinar datos de ambas tablas
+      const allAssets = [...assetsData, ...epiAssetsData];
+
       const now = new Date();
-      const pendingCount = data.filter(asset => {
+      const pendingCount = allAssets.filter(asset => {
         if (!asset.last_maintenance_date) return true; // Sin mantenimiento previo
         
         const lastMaintenance = new Date(asset.last_maintenance_date);
@@ -167,18 +210,38 @@ export const useDashboardMetrics = () => {
   // Obtener crecimiento mensual
   const fetchMonthlyGrowth = async () => {
     try {
-      const { data, error } = await supabase
-        .from('epi_assets')
-        .select('created_at')
-        .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString());
+      const dateLimit = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+      
+      // Obtener datos de ambas tablas
+      const [assetsResult, epiAssetsResult] = await Promise.all([
+        supabase
+          .from('assets')
+          .select('created_at')
+          .gte('created_at', dateLimit),
+        supabase
+          .from('epi_assets')
+          .select('created_at')
+          .gte('created_at', dateLimit)
+      ]);
 
-      if (error) {
-        console.error('Error fetching monthly growth:', error);
-        return [];
+      const assetsData = assetsResult.data || [];
+      const epiAssetsData = epiAssetsResult.data || [];
+      
+      if (assetsResult.error) {
+        console.error('Error fetching assets monthly growth:', assetsResult.error);
+      }
+      if (epiAssetsResult.error) {
+        console.error('Error fetching epi_assets monthly growth:', epiAssetsResult.error);
       }
 
+      // Combinar datos de ambas tablas
+      const allAssets = [
+        ...assetsData.map(asset => ({ created_at: asset.created_at })),
+        ...epiAssetsData.map(asset => ({ created_at: asset.created_at }))
+      ];
+
       // Agrupar por mes
-      const monthlyData = data.reduce((acc, asset) => {
+      const monthlyData = allAssets.reduce((acc, asset) => {
         const month = new Date(asset.created_at).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
         acc[month] = (acc[month] || 0) + 1;
         return acc;
