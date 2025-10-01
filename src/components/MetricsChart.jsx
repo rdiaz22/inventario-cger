@@ -57,77 +57,80 @@ const MetricsChart = ({ data, type = 'bar', title, height = 200 }) => {
   const renderPieChart = () => {
     const total = data.reduce((sum, item) => sum + item.count, 0);
     let currentAngle = 0;
-    
+
     const colors = [
-      '#3b82f6', '#10b981', '#f59e0b', '#ef4444', 
+      '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
       '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'
     ];
 
+    // Columnas de leyenda: 1 (<=6 items), 2 (<=12), 3 (>12)
+    const legendColsClasses = data.length > 12
+      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+      : data.length > 6
+        ? 'grid-cols-1 sm:grid-cols-2'
+        : 'grid-cols-1';
+
     return (
-      <svg width="100%" height={height} className="overflow-visible">
-        <g transform={`translate(${height/2}, ${height/2})`}>
-          {data.map((item, index) => {
-            const percentage = (item.count / total) * 100;
-            const angle = (percentage / 100) * 360;
-            const largeArcFlag = angle > 180 ? 1 : 0;
-            
-            const x1 = Math.cos(currentAngle * Math.PI / 180) * 60;
-            const y1 = Math.sin(currentAngle * Math.PI / 180) * 60;
-            const x2 = Math.cos((currentAngle + angle) * Math.PI / 180) * 60;
-            const y2 = Math.sin((currentAngle + angle) * Math.PI / 180) * 60;
-            
-            const path = [
-              `M 0 0`,
-              `L ${x1} ${y1}`,
-              `A 60 60 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-              'Z'
-            ].join(' ');
-            
-            currentAngle += angle;
-            
-            return (
-              <g key={index}>
-                <path
-                  d={path}
-                  fill={colors[index % colors.length]}
-                  className="transition-all duration-300 hover:opacity-80"
-                />
-                <text
-                  x={Math.cos((currentAngle - angle/2) * Math.PI / 180) * 80}
-                  y={Math.sin((currentAngle - angle/2) * Math.PI / 180) * 80}
-                  className="text-xs fill-white font-bold"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                >
-                  {percentage.toFixed(1)}%
-                </text>
-              </g>
-            );
-          })}
-        </g>
-        
-        {/* Leyenda */}
-        <g transform={`translate(${height + 20}, 20)`}>
+      <div className="flex flex-col lg:flex-row gap-4">
+        <svg width="100%" height={height} className="overflow-visible lg:flex-shrink-0 lg:w-auto">
+          <g transform={`translate(${height/2}, ${height/2})`}>
+            {data.map((item, index) => {
+              const percentage = (item.count / total) * 100;
+              const angle = (percentage / 100) * 360;
+              const largeArcFlag = angle > 180 ? 1 : 0;
+
+              const x1 = Math.cos(currentAngle * Math.PI / 180) * 60;
+              const y1 = Math.sin(currentAngle * Math.PI / 180) * 60;
+              const x2 = Math.cos((currentAngle + angle) * Math.PI / 180) * 60;
+              const y2 = Math.sin((currentAngle + angle) * Math.PI / 180) * 60;
+
+              const path = [
+                `M 0 0`,
+                `L ${x1} ${y1}`,
+                `A 60 60 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                'Z'
+              ].join(' ');
+
+              currentAngle += angle;
+
+              return (
+                <g key={index}>
+                  <path
+                    d={path}
+                    fill={colors[index % colors.length]}
+                    className="transition-all duration-300 hover:opacity-80"
+                  />
+                  <text
+                    x={Math.cos((currentAngle - angle/2) * Math.PI / 180) * 80}
+                    y={Math.sin((currentAngle - angle/2) * Math.PI / 180) * 80}
+                    className="text-xs fill-white font-bold"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                  >
+                    {percentage.toFixed(1)}%
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        </svg>
+
+        {/* Leyenda accesible y responsiva */}
+        <div className={`grid ${legendColsClasses} gap-x-6 gap-y-2 items-start content-start min-w-[220px]`}
+             aria-label="Leyenda de activos por categoría">
           {data.map((item, index) => (
-            <g key={index} transform={`translate(0, ${index * 20})`}>
-              <rect
-                width="12"
-                height="12"
-                fill={colors[index % colors.length]}
-                rx="2"
+            <div key={index} className="flex items-center">
+              <span
+                className="inline-block w-3 h-3 rounded-sm mr-2"
+                style={{ backgroundColor: colors[index % colors.length] }}
               />
-              <text
-                x="20"
-                y="9"
-                className="text-xs fill-gray-700"
-                dominantBaseline="middle"
-              >
+              <span className="text-xs text-gray-700 truncate">
                 {item.name} ({item.count})
-              </text>
-            </g>
+              </span>
+            </div>
           ))}
-        </g>
-      </svg>
+        </div>
+      </div>
     );
   };
 
