@@ -46,23 +46,11 @@ SELECT 'User', 'Usuario estándar con acceso básico',
        '{"assets": true}'::jsonb
 WHERE NOT EXISTS (SELECT 1 FROM user_roles WHERE LOWER(name) = 'user');
 
--- 4. NORMALIZAR NOMBRES DE ROLES
--- ===============================
-
--- Actualizar 'user' a 'User' (capitalizar)
-UPDATE user_roles 
-SET name = 'User' 
-WHERE LOWER(name) = 'user' AND name != 'User';
-
--- Actualizar 'admin' a 'Admin' (capitalizar)
-UPDATE user_roles 
-SET name = 'Admin' 
-WHERE LOWER(name) = 'admin' AND name != 'Admin';
-
--- Actualizar 'auditor' a 'Auditor' (capitalizar)
-UPDATE user_roles 
-SET name = 'Auditor' 
-WHERE LOWER(name) = 'auditor' AND name != 'Auditor';
+-- 4. (SE MUEVE DESPUÉS) NORMALIZAR NOMBRES DE ROLES
+-- =================================================
+-- Nota: Se normaliza DESPUÉS de consolidar y eliminar duplicados para evitar
+-- violar el índice único (user_roles_name_key) al intentar renombrar 'user' a
+-- 'User' cuando ya existe.
 
 -- 5. ELIMINAR ROLES DUPLICADOS
 -- =============================
@@ -111,8 +99,19 @@ roles_to_delete AS (
 DELETE FROM user_roles 
 WHERE id IN (SELECT id FROM roles_to_delete);
 
--- 6. VERIFICAR RESULTADO FINAL
+-- 6. NORMALIZAR NOMBRES (DESPUÉS DE LA LIMPIEZA)
 -- =============================
+UPDATE user_roles
+SET name = CASE LOWER(name)
+  WHEN 'admin' THEN 'Admin'
+  WHEN 'auditor' THEN 'Auditor'
+  WHEN 'user' THEN 'User'
+  ELSE name
+END
+WHERE LOWER(name) IN ('admin','auditor','user');
+
+-- 7. VERIFICAR RESULTADO FINAL
+-- ============================
 SELECT 'Roles después de la limpieza:' as status;
 SELECT 
     id,
@@ -123,7 +122,7 @@ SELECT
 FROM user_roles 
 ORDER BY name;
 
--- 7. VERIFICAR USUARIOS Y SUS ROLES
+-- 8. VERIFICAR USUARIOS Y SUS ROLES
 -- ==================================
 SELECT 'Usuarios y sus roles asignados:' as status;
 SELECT 
@@ -136,7 +135,7 @@ FROM system_users su
 LEFT JOIN user_roles ur ON su.role_id = ur.id
 ORDER BY su.first_name, su.last_name;
 
--- 8. MENSAJE DE CONFIRMACIÓN
+-- 9. MENSAJE DE CONFIRMACIÓN
 -- ===========================
 SELECT '✅ Roles duplicados eliminados y normalizados' as resultado;
 SELECT '🔧 Nombres de roles capitalizados correctamente' as normalization;
