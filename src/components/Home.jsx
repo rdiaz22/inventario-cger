@@ -16,7 +16,7 @@ const Home = () => {
       change: "+12%",
       changeType: "positive",
       color: "blue",
-      onClick: () => window.location.href = '/activos'
+      onClick: () => window.location.href = '/admin/activos'
     },
     {
       title: "Usuarios Activos",
@@ -25,7 +25,7 @@ const Home = () => {
       change: "+5%",
       changeType: "positive",
       color: "green",
-      onClick: () => window.location.href = '/configuracion'
+      onClick: () => window.location.href = '/admin/configuracion'
     },
     {
       title: "Mantenimientos Pendientes",
@@ -174,7 +174,7 @@ const Home = () => {
           <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h2>
           <div className="space-y-3">
             <button 
-              onClick={() => window.location.href = '/escanear'}
+              onClick={() => window.location.href = '/admin/escanear'}
               className="w-full flex items-center space-x-3 p-2 sm:p-3 text-left hover:bg-blue-50 rounded-lg transition-colors border border-gray-200 hover:border-blue-300"
             >
               <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
@@ -187,7 +187,7 @@ const Home = () => {
             </button>
 
             <button 
-              onClick={() => window.location.href = '/activos'}
+              onClick={() => window.location.href = '/admin/activos'}
               className="w-full flex items-center space-x-3 p-2 sm:p-3 text-left hover:bg-green-50 rounded-lg transition-colors border border-gray-200 hover:border-green-300"
             >
               <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
@@ -200,7 +200,7 @@ const Home = () => {
             </button>
 
             <button 
-              onClick={() => window.location.href = '/configuracion'}
+              onClick={() => window.location.href = '/admin/configuracion'}
               className="w-full flex items-center space-x-3 p-2 sm:p-3 text-left hover:bg-purple-50 rounded-lg transition-colors border border-gray-200 hover:border-purple-300"
             >
               <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">

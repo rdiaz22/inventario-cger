@@ -46,13 +46,13 @@ const Sidebar = ({ onCategoriasClick }) => {
   }, []);
 
   const menuItems = [
-    { name: "Inicio", icon: <Home className="h-4 w-4" />, path: "/" },
-    { name: "Activos", icon: <Package className="h-4 w-4" />, path: "/activos" },
-    { name: "Mantenimiento", icon: <Wrench size={18} />, path: "/mantenimiento" },
-    { name: "Auditorías", icon: <ClipboardList size={18} />, path: "/auditorias" },
-    { name: "Configuración", icon: <Settings className="h-4 w-4" />, path: "/configuracion" },
+    { name: "Inicio", icon: <Home className="h-4 w-4" />, path: "/admin/dashboard" },
+    { name: "Activos", icon: <Package className="h-4 w-4" />, path: "/admin/activos" },
+    { name: "Mantenimiento", icon: <Wrench size={18} />, path: "/admin/mantenimiento" },
+    { name: "Auditorías", icon: <ClipboardList size={18} />, path: "/admin/auditorias" },
+    { name: "Configuración", icon: <Settings className="h-4 w-4" />, path: "/admin/configuracion" },
     { name: "Categorías", icon: <Layers className="h-4 w-4" />, action: onCategoriasClick },
-    { name: "Escanear", icon: <ScanBarcode className="h-4 w-4" />, path: "/escanear" },
+    { name: "Escanear", icon: <ScanBarcode className="h-4 w-4" />, path: "/admin/escanear" },
   ];
 
   const renderMenuItems = () =>
