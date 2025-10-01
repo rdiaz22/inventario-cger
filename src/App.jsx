@@ -48,7 +48,6 @@ function App() {
         {!session ? (
           <>
             <Route path="/admin/login" element={<Login />} />
-            <Route path="/admin/registro" element={<Registro />} />
             <Route path="/admin/*" element={<Navigate to="/admin/login" replace />} />
             <Route path="*" element={<Navigate to="/admin/login" replace />} />
           </>
