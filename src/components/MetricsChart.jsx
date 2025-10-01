@@ -133,10 +133,11 @@ const MetricsChart = ({ data, type = 'bar', title, height = 200 }) => {
 
   const renderLineChart = () => {
     const maxValue = Math.max(...data.map(item => item.count));
+    const width = 300; // Ancho fijo para el SVG
     const points = data.map((item, index) => {
-      const x = (index / (data.length - 1)) * 100;
-      const y = 100 - ((item.count / maxValue) * 100);
-      return `${x}%,${y}%`;
+      const x = (index / (data.length - 1)) * width;
+      const y = height - ((item.count / maxValue) * height);
+      return `${x},${y}`;
     }).join(' ');
     
     return (
@@ -149,21 +150,21 @@ const MetricsChart = ({ data, type = 'bar', title, height = 200 }) => {
           className="transition-all duration-300"
         />
         {data.map((item, index) => {
-          const x = (index / (data.length - 1)) * 100;
-          const y = 100 - ((item.count / maxValue) * 100);
+          const x = (index / (data.length - 1)) * width;
+          const y = height - ((item.count / maxValue) * height);
           
           return (
             <g key={index}>
               <circle
-                cx={`${x}%`}
-                cy={`${y}%`}
+                cx={x}
+                cy={y}
                 r="4"
                 fill="#3b82f6"
                 className="transition-all duration-300 hover:r-6"
               />
               <text
-                x={`${x}%`}
-                y={y > 50 ? y + 20 : y - 10}
+                x={x}
+                y={y > height/2 ? y + 20 : y - 10}
                 textAnchor="middle"
                 className="text-xs fill-gray-600 font-medium"
               >

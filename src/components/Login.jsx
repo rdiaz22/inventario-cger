@@ -29,8 +29,8 @@ const Login = () => {
       }
       setError("Correo o contraseña incorrectos.");
     } else {
-      // Redirigir manualmente a la vista principal
-      window.location.href = "/activos";
+      // Redirigir manualmente a la vista principal administrativa
+      window.location.href = "/admin/dashboard";
     }
   };
 
