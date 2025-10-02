@@ -99,7 +99,7 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`;
+        const filePath = `assets/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from("activos")
@@ -108,11 +108,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
         if (uploadError) {
           console.error("Error subiendo imagen:", uploadError);
         } else {
-          const { data: { publicUrl } } = supabase
-            .storage
-            .from("activos")
-            .getPublicUrl(filePath);
-          imageUrl = publicUrl;
+          // Save storage path; signed URLs will be generated on read
+          imageUrl = filePath;
         }
       }
 

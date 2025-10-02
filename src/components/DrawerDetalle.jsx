@@ -1,12 +1,22 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import ModalEditar from "./ModalEditar";
+import { getSignedUrlIfNeeded } from "../utils/storage";
 
 Modal.setAppElement("#root");
 
 const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [imageResolvedUrl, setImageResolvedUrl] = useState("");
+
+  useEffect(() => {
+    const resolve = async () => {
+      const url = await getSignedUrlIfNeeded(asset?.image_url);
+      setImageResolvedUrl(url);
+    };
+    resolve();
+  }, [asset?.image_url]);
 
   // Debug: ver qué datos recibe el componente
   console.log("DrawerDetalle recibió asset:", asset);
@@ -44,10 +54,10 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
               ✕
             </button>
           </div>
-          {asset.image_url && (
+          {imageResolvedUrl && (
             <div className="relative mb-4">
               <img
-                src={asset.image_url}
+                src={imageResolvedUrl}
                 alt="Foto del activo"
                 className="w-full h-auto rounded shadow-md"
               />
@@ -154,7 +164,7 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
           ✕
         </button>
         <img
-          src={asset.image_url}
+          src={imageResolvedUrl}
           alt="Imagen ampliada"
           className="w-full h-auto"
         />

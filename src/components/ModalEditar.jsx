@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import { isStoragePath } from "../utils/storage";
 
 const ModalEditar = ({ asset, onClose, onUpdated }) => {
   const [formData, setFormData] = useState({});
@@ -114,7 +115,8 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
     if (imageFile) {
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `${formData.id}-${Date.now()}.${fileExt}`;
-      const filePath = fileName;
+      // Store inside a subfolder for organization
+      const filePath = `assets/${fileName}`;
        
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("activos")
@@ -129,17 +131,8 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         return;
       }
     
-      const { data: publicUrlData, error: urlError } = supabase.storage
-        .from("activos")
-        .getPublicUrl(filePath);
-    
-      if (urlError) {
-        console.error("❌ Error al obtener URL pública:", urlError.message);
-        setLoading(false);
-        return;
-      }
-    
-      imageUrl = publicUrlData.publicUrl;
+      // Save storage path instead of public URL
+      imageUrl = filePath;
     }
 
     // Si es EPI, actualizar solo en epi_assets y epi_sizes

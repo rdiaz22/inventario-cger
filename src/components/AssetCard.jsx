@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaEye, FaPrint } from "react-icons/fa";
 // import { useNavigate } from "react-router-dom"; // Eliminar esta línea
 import QRCode from "react-qr-code";
@@ -6,6 +6,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import JsBarcode from "jsbarcode";
 import { toDataURL } from 'qrcode'; // Agregar esta importación
+import { getSignedUrlIfNeeded } from "../utils/storage";
 
 const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   // const navigate = useNavigate(); // Eliminar esta línea
@@ -106,6 +107,16 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     pdf.save(`dymo-${barcodeValue}.pdf`);
   };
 
+  const [imageResolvedUrl, setImageResolvedUrl] = useState("");
+
+  useEffect(() => {
+    const resolve = async () => {
+      const url = await getSignedUrlIfNeeded(asset.image_url);
+      setImageResolvedUrl(url);
+    };
+    resolve();
+  }, [asset.image_url]);
+
   return (
     <div
       onClick={onClick} // Usar la prop onClick
@@ -113,7 +124,7 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     >
       {/* Imagen */}
       <img
-        src={asset.image_url}
+        src={imageResolvedUrl}
         alt={asset.name}
         className="w-full sm:w-32 h-32 object-cover rounded-md flex-shrink-0"
       />

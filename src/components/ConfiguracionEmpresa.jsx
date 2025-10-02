@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import { getSignedUrlIfNeeded, isStoragePath } from "../utils/storage";
 import { 
   Building2, 
   Upload, 
@@ -50,7 +51,11 @@ const ConfiguracionEmpresa = () => {
       if (data) {
         setCompanyData(data);
         if (data.company_logo_url) {
-          setLogoPreview(data.company_logo_url);
+          // If we store a storage path, resolve a signed URL for preview
+          const previewUrl = isStoragePath(data.company_logo_url)
+            ? await getSignedUrlIfNeeded(data.company_logo_url)
+            : data.company_logo_url;
+          setLogoPreview(previewUrl);
         }
       }
     } catch (error) {
@@ -111,12 +116,8 @@ const ConfiguracionEmpresa = () => {
         throw uploadError;
       }
 
-      // Obtener URL pública
-      const { data: { publicUrl } } = supabase.storage
-        .from('activos')
-        .getPublicUrl(filePath);
-
-      return publicUrl;
+      // Return storage path; signed URLs will be created at read time
+      return filePath;
     } catch (error) {
       console.error("Error al subir logo:", error);
       toast.error("Error al subir logo");
@@ -168,7 +169,11 @@ const ConfiguracionEmpresa = () => {
   const handleCancel = () => {
     setIsEditing(false);
     setLogoFile(null);
-    setLogoPreview(companyData.company_logo_url || "");
+      // Refresh preview with a new signed URL
+      const refreshed = companyData.company_logo_url
+        ? await getSignedUrlIfNeeded(companyData.company_logo_url)
+        : "";
+      setLogoPreview(refreshed);
     fetchCompanyData(); // Recargar datos originales
   };
 

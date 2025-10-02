@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import { getSignedUrlIfNeeded } from "../utils/storage";
 import QRCode from "react-qr-code";
 
 const FichaActivo = () => {
@@ -10,6 +11,7 @@ const FichaActivo = () => {
   const [activo, setActivo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mostrarEtiqueta, setMostrarEtiqueta] = useState(false);
+  const [imageResolvedUrl, setImageResolvedUrl] = useState("");
 
   useEffect(() => {
     const fetchActivo = async () => {
@@ -80,6 +82,18 @@ const FichaActivo = () => {
     fetchActivo();
   }, [id]);
 
+  useEffect(() => {
+    const resolve = async () => {
+      if (!activo?.image_url) {
+        setImageResolvedUrl("");
+        return;
+      }
+      const url = await getSignedUrlIfNeeded(activo.image_url);
+      setImageResolvedUrl(url);
+    };
+    resolve();
+  }, [activo]);
+
   const imprimirEtiqueta = () => {
     setMostrarEtiqueta(true);
     setTimeout(() => {
@@ -117,7 +131,7 @@ const FichaActivo = () => {
           </div>
           <div className="bg-gray-100 rounded-xl shadow-md w-full max-w-xl p-4">
             <img
-              src={activo.image_url}
+              src={imageResolvedUrl}
               alt="Imagen del activo"
               className="w-full h-1/2 object-contain rounded mb-4"
             />

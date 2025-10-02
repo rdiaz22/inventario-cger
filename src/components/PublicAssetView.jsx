@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import QRCode from 'react-qr-code';
 import { ArrowLeft, QrCode, Calendar, User, Tag, Building } from 'lucide-react';
+import { getSignedUrlIfNeeded } from '../utils/storage';
 
 const PublicAssetView = () => {
   const { id } = useParams();
@@ -11,6 +12,7 @@ const PublicAssetView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mostrarQR, setMostrarQR] = useState(false);
+  const [imageResolvedUrl, setImageResolvedUrl] = useState('');
 
   useEffect(() => {
     const fetchActivo = async () => {
@@ -86,6 +88,18 @@ const PublicAssetView = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    const resolveImage = async () => {
+      if (!activo?.image_url) {
+        setImageResolvedUrl('');
+        return;
+      }
+      const url = await getSignedUrlIfNeeded(activo.image_url);
+      setImageResolvedUrl(url);
+    };
+    resolveImage();
+  }, [activo]);
+
   const DetailItem = ({ icon: Icon, label, value, className = "" }) => (
     <div className={`bg-white rounded-lg p-4 shadow-sm border ${className}`}>
       <div className="flex items-center space-x-2 mb-2">
@@ -148,10 +162,10 @@ const PublicAssetView = () => {
       {/* Información principal del activo */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         {/* Imagen del activo */}
-        {activo.image_url && (
+        {imageResolvedUrl && (
           <div className="aspect-w-16 aspect-h-9 bg-gray-100">
             <img
-              src={activo.image_url}
+              src={imageResolvedUrl}
               alt={activo.name}
               className="w-full h-64 object-cover"
             />
