@@ -1,0 +1,29 @@
+[33mcommit 815c8352518d622eb23d0562f23ca83e6b8eac23[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: rdiaz22 <78754585+rdiaz22@users.noreply.github.com>
+Date:   Thu Oct 2 14:44:49 2025 +0100
+
+    security: enforce CSP headers; protect edge functions with admin checks; use signed URLs for storage (15m default); save storage paths instead of public URLs
+
+[1mdiff --git a/vercel.json b/vercel.json[m
+[1mindex 1323cda..509191f 100644[m
+[1m--- a/vercel.json[m
+[1m+++ b/vercel.json[m
+[36m@@ -4,5 +4,18 @@[m
+       "source": "/(.*)",[m
+       "destination": "/index.html"[m
+     }[m
+[32m+[m[32m  ],[m
+[32m+[m[32m  "headers": [[m
+[32m+[m[32m    {[m
+[32m+[m[32m      "source": "/(.*)",[m
+[32m+[m[32m      "headers": [[m
+[32m+[m[32m        { "key": "X-Frame-Options", "value": "DENY" },[m
+[32m+[m[32m        { "key": "X-Content-Type-Options", "value": "nosniff" },[m
+[32m+[m[32m        { "key": "Referrer-Policy", "value": "no-referrer" },[m
+[32m+[m[32m        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), fullscreen=(self)" },[m
+[32m+[m[32m        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },[m
+[32m+[m[32m        { "key": "Content-Security-Policy", "value": "default-src 'self'; img-src 'self' data: https://*.supabase.co; connect-src 'self' https://*.supabase.co; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests" }[m
+[32m+[m[32m      ][m
+[32m+[m[32m    }[m
+   ][m
+ }[m

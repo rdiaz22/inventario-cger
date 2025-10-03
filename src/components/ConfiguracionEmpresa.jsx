@@ -166,14 +166,14 @@ const ConfiguracionEmpresa = () => {
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     setIsEditing(false);
     setLogoFile(null);
-      // Refresh preview with a new signed URL
-      const refreshed = companyData.company_logo_url
-        ? await getSignedUrlIfNeeded(companyData.company_logo_url)
-        : "";
-      setLogoPreview(refreshed);
+    // Refresh preview with a new signed URL
+    const refreshed = companyData.company_logo_url
+      ? await getSignedUrlIfNeeded(companyData.company_logo_url)
+      : "";
+    setLogoPreview(refreshed);
     fetchCompanyData(); // Recargar datos originales
   };
 
