@@ -142,39 +142,27 @@ export const useDashboardMetrics = () => {
   // Obtener mantenimientos pendientes
   const fetchPendingMaintenance = async () => {
     try {
-      // Buscar activos que necesiten mantenimiento en ambas tablas
-      const [assetsResult, epiAssetsResult] = await Promise.all([
-        supabase
-          .from('assets')
-          .select('id, last_maintenance_date, maintenance_frequency')
-          .not('maintenance_frequency', 'is', null),
-        supabase
-          .from('epi_assets')
-          .select('id, last_maintenance_date, maintenance_frequency')
-          .not('maintenance_frequency', 'is', null)
-      ]);
+      // En producción puede no existir la tabla `assets`. Consultamos solo `epi_assets` para evitar 400.
+      const { data, error } = await supabase
+        .from('epi_assets')
+        .select('id, last_maintenance_date, maintenance_frequency')
+        .not('maintenance_frequency', 'is', null);
 
-      const assetsData = assetsResult.data || [];
-      const epiAssetsData = epiAssetsResult.data || [];
-      
-      if (assetsResult.error) {
-        console.error('Error fetching assets maintenance:', assetsResult.error);
+      if (error) {
+        console.error('Error fetching epi_assets maintenance:', error);
+        return 0;
       }
-      if (epiAssetsResult.error) {
-        console.error('Error fetching epi_assets maintenance:', epiAssetsResult.error);
-      }
-
-      // Combinar datos de ambas tablas
-      const allAssets = [...assetsData, ...epiAssetsData];
 
       const now = new Date();
-      const pendingCount = allAssets.filter(asset => {
+      const pendingCount = (data || []).filter(asset => {
         if (!asset.last_maintenance_date) return true; // Sin mantenimiento previo
-        
+
         const lastMaintenance = new Date(asset.last_maintenance_date);
         const frequencyDays = asset.maintenance_frequency || 90; // Default 90 días
-        const nextMaintenance = new Date(lastMaintenance.getTime() + (frequencyDays * 24 * 60 * 60 * 1000));
-        
+        const nextMaintenance = new Date(
+          lastMaintenance.getTime() + (frequencyDays * 24 * 60 * 60 * 1000)
+        );
+
         return nextMaintenance <= now;
       }).length;
 
