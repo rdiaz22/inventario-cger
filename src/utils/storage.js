@@ -9,14 +9,22 @@ export async function getSignedUrlIfNeeded(pathOrUrl, options = {}) {
     return pathOrUrl;
   }
 
-  // Assume it's a storage path inside the bucket
+  // Normalize when the value includes the bucket prefix (e.g. "activos/...")
+  // or comes with a leading slash
+  let objectPath = String(pathOrUrl).replace(/^\/+/, "");
+  const bucketPrefix = `${bucket}/`;
+  if (objectPath.startsWith(bucketPrefix)) {
+    objectPath = objectPath.slice(bucketPrefix.length);
+  }
+
+  // Try signed URL first (for private buckets)
   const { data, error } = await supabase.storage
     .from(bucket)
-    .createSignedUrl(pathOrUrl, expiresIn);
+    .createSignedUrl(objectPath, expiresIn);
 
   if (error) {
-    // Fallback to public URL (in case bucket still public during migration)
-    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(pathOrUrl);
+    // Fallback to public URL (in case the bucket is public or objectPath mismatch)
+    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(objectPath);
     return pub?.publicUrl || "";
   }
 

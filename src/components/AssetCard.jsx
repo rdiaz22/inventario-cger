@@ -117,6 +117,12 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     resolve();
   }, [asset.image_url]);
 
+  const placeholderDataUrl =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="12" fill="#9ca3af">Sin imagen</text></svg>`
+    );
+
   return (
     <div
       onClick={onClick} // Usar la prop onClick
@@ -124,9 +130,14 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     >
       {/* Imagen */}
       <img
-        src={imageResolvedUrl}
+        src={imageResolvedUrl || placeholderDataUrl}
         alt={asset.name}
         className="w-full sm:w-32 h-32 object-cover rounded-md flex-shrink-0"
+        onError={(e) => {
+          if (e?.currentTarget?.src !== placeholderDataUrl) {
+            e.currentTarget.src = placeholderDataUrl;
+          }
+        }}
       />
 
       {/* Info */}
