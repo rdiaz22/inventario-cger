@@ -4,10 +4,29 @@ export async function getSignedUrlIfNeeded(pathOrUrl, options = {}) {
   const { bucket = "activos", expiresIn = 900 } = options;
   if (!pathOrUrl) return "";
 
-  // If it's already an absolute URL, return as-is
-  if (/^https?:\/\//i.test(pathOrUrl) || pathOrUrl.startsWith("data:")) {
-    return pathOrUrl;
+  // If it's an absolute URL but it's a Supabase Storage URL, parse it and try to
+  // resolve again (esto permite migraciones de bucket p.ej. 'assets' -> 'activos').
+  // Para cualquier otra URL externa o data:, devolver tal cual.
+  if (/^https?:\/\//i.test(pathOrUrl)) {
+    try {
+      const u = new URL(pathOrUrl);
+      const isSupabase = /\.supabase\.co$/i.test(u.hostname) && u.pathname.includes('/storage/v1/object/');
+      if (isSupabase) {
+        // Extraer bucket y objeto del path: /storage/v1/object/(public|sign)/<bucket>/<obj>
+        const parts = u.pathname.split('/');
+        const idx = parts.findIndex(p => p === 'object');
+        const bucketFromUrl = parts[idx + 2] || '';
+        const objectFromUrl = parts.slice(idx + 3).join('/');
+        // Reintentar resolución usando nuestra lógica de candidatos (debajo)
+        pathOrUrl = `${bucketFromUrl}/${objectFromUrl}`;
+      } else {
+        return pathOrUrl;
+      }
+    } catch (_) {
+      return pathOrUrl;
+    }
   }
+  if (String(pathOrUrl).startsWith("data:")) return pathOrUrl;
 
   // Normalize various storage path shapes to objectPath inside the bucket
   // Accept examples:
