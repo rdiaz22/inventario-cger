@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import { normalizeStoragePath } from "../utils/storage";
 
 const ModalForm = ({ isOpen, onClose, onCreated }) => {
   const [categories, setCategories] = useState([]);
@@ -108,8 +109,8 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
         if (uploadError) {
           console.error("Error subiendo imagen:", uploadError);
         } else {
-          // Save storage path; signed URLs will be generated on read
-          imageUrl = filePath;
+          // Save storage path normalized relative to bucket
+          imageUrl = normalizeStoragePath(filePath, 'activos');
         }
       }
 
@@ -184,7 +185,7 @@ const ModalForm = ({ isOpen, onClose, onCreated }) => {
           fecha_garantia: form.fecha_garantia || null,
           precio_compra: form.precio_compra ? parseFloat(form.precio_compra) : null,
           status: form.status,
-          image_url: imageUrl,
+          image_url: normalizeStoragePath(imageUrl, 'activos'),
           quantity: needsQuantity ? parseInt(form.quantity) || 1 : 1 // Campo de cantidad
         };
         

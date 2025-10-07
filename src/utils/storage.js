@@ -1,5 +1,32 @@
 import { supabase } from "../supabaseClient";
 
+export function normalizeStoragePath(pathOrUrl, bucket = "activos") {
+  if (!pathOrUrl) return "";
+  // Absolute non-supabase or data URLs are left as-is for display, but for DB we store relative
+  if (/^data:/i.test(pathOrUrl)) return pathOrUrl;
+  try {
+    if (/^https?:\/\//i.test(pathOrUrl)) {
+      const u = new URL(pathOrUrl);
+      const isSupabase = /\.supabase\.co$/i.test(u.hostname) && u.pathname.includes('/storage/v1/object/');
+      if (!isSupabase) return pathOrUrl;
+      const parts = u.pathname.split('/');
+      const idx = parts.findIndex(p => p === 'object');
+      const bucketFromUrl = parts[idx + 2] || '';
+      const objectFromUrl = parts.slice(idx + 3).join('/');
+      // If bucket matches or not, always store object path relative to bucket
+      return objectFromUrl.replace(/^\/+/, '');
+    }
+  } catch (_) { /* ignore parse errors */ }
+
+  // Relative forms: strip bucket/public prefixes
+  let raw = String(pathOrUrl).trim();
+  raw = raw.replace(/^\/+/, "");
+  if (raw.startsWith("public/")) raw = raw.slice("public/".length);
+  if (raw.startsWith("storage/v1/object/public/")) raw = raw.slice("storage/v1/object/public/".length);
+  if (raw.startsWith(`${bucket}/`)) raw = raw.slice(`${bucket}/`.length);
+  return raw;
+}
+
 export async function getSignedUrlIfNeeded(pathOrUrl, options = {}) {
   const { bucket = "activos", expiresIn = 900 } = options;
   if (!pathOrUrl) return "";

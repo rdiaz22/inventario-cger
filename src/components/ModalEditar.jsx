@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
-import { isStoragePath } from "../utils/storage";
+import { isStoragePath, normalizeStoragePath } from "../utils/storage";
 
 const ModalEditar = ({ asset, onClose, onUpdated }) => {
   const [formData, setFormData] = useState({});
@@ -131,8 +131,8 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         return;
       }
     
-      // Save storage path instead of public URL
-      imageUrl = filePath;
+      // Save normalized storage path
+      imageUrl = normalizeStoragePath(filePath, 'activos');
     }
 
     // Si es EPI, actualizar solo en epi_assets y epi_sizes
@@ -170,7 +170,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         assigned_to: formData.assigned_to || null,
         status: formData.status || 'Activo',
         supplier: formData.supplier || null,
-        image_url: imageUrl || existingEpi.image_url,
+        image_url: normalizeStoragePath(imageUrl || existingEpi.image_url, 'activos'),
         codigo: formData.codigo || asset.codigo || null,
         fecha_compra: formData.fecha_compra || null,
         fecha_garantia: formData.fecha_garantia || null,
@@ -236,7 +236,7 @@ const ModalEditar = ({ asset, onClose, onUpdated }) => {
         fecha_garantia: formData.fecha_garantia || null,
         precio_compra: formData.precio_compra ? parseFloat(formData.precio_compra) : null,
         status: formData.status || 'Activo',
-        image_url: imageUrl,
+        image_url: normalizeStoragePath(imageUrl, 'activos'),
         quantity: needsQuantity ? parseInt(formData.quantity) || 1 : 1 // Campo de cantidad
       };
 
