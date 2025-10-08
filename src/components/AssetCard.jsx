@@ -6,7 +6,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import JsBarcode from "jsbarcode";
 import { toDataURL } from 'qrcode'; // Agregar esta importación
-import { getSignedUrlIfNeeded } from "../utils/storage";
+import { getSignedUrlIfNeeded, getThumbnailPublicUrl } from "../utils/storage";
 
 const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   // const navigate = useNavigate(); // Eliminar esta línea
@@ -108,8 +108,13 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   };
 
   const [imageResolvedUrl, setImageResolvedUrl] = useState("");
+  const [thumbUrl, setThumbUrl] = useState("");
 
   useEffect(() => {
+    // Thumbnail rápido para listas
+    const t = getThumbnailPublicUrl(asset.image_url, { width: 320, quality: 72 });
+    setThumbUrl(t);
+    // Imagen completa (si hace falta en vistas detalladas al abrir card)
     const resolve = async () => {
       const url = await getSignedUrlIfNeeded(asset.image_url);
       setImageResolvedUrl(url);
@@ -130,9 +135,14 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     >
       {/* Imagen */}
       <img
-        src={imageResolvedUrl || placeholderDataUrl}
+        src={thumbUrl || placeholderDataUrl}
         alt={asset.name}
-        className="w-full sm:w-32 h-32 object-cover rounded-md flex-shrink-0"
+        width={128}
+        height={128}
+        loading="lazy"
+        decoding="async"
+        className="w-full sm:w-32 h-32 object-cover rounded-md flex-shrink-0 bg-gray-100 transition-opacity duration-200 opacity-0"
+        onLoad={(e)=> e.currentTarget.classList.remove('opacity-0')}
         onError={(e) => {
           if (e?.currentTarget?.src !== placeholderDataUrl) {
             e.currentTarget.src = placeholderDataUrl;

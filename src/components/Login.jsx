@@ -20,8 +20,13 @@ const Login = () => {
     setLoading(true);
 
     const normalizedEmail = (formData.email || "").trim().toLowerCase();
+    
+    // Log muy visible para confirmar que se ejecuta
+    console.log('🚀 INICIANDO LOGIN - CÓDIGO ACTUALIZADO', { email: normalizedEmail, timestamp: new Date().toISOString() });
     // Precheck anti fuerza bruta
     try {
+      console.log('🛡️ Enviando precheck de rate limiting...', { email: normalizedEmail });
+      
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/login-precheck`, {
         method: 'POST',
         headers: { 
@@ -31,36 +36,46 @@ const Login = () => {
         },
         body: JSON.stringify({ email: normalizedEmail })
       });
+      
+      console.log('📊 Precheck response:', { status: res.status });
+      
       if (res.status === 429) {
         const j = await res.json();
         const wait = Number(j?.retryAfterSeconds || 60);
+        console.log('🚫 Rate limiting activado!', { wait, response: j });
         setCooldown(wait);
         const timer = setInterval(() => setCooldown((s) => { if (s <= 1) { clearInterval(timer); return 0; } return s - 1; }), 1000);
         setLoading(false);
         setError(`Demasiados intentos. Inténtalo en ${wait} segundos.`);
         return;
+      } else if (res.status === 200) {
+        const data = await res.json();
+        console.log('✅ Precheck permitido:', data);
+      } else {
+        console.warn('⚠️ Precheck status inesperado:', res.status);
       }
     } catch (err) {
-      if (import.meta?.env?.DEV) {
-        // eslint-disable-next-line no-console
-        console.warn('login-precheck failed', err);
-      }
+      console.warn('💥 Error en precheck:', err);
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log('🔐 Intentando login con Supabase...', { email: normalizedEmail });
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password: formData.password,
     });
 
     if (error) {
-      if (import.meta?.env?.DEV) {
-        // Log detallado solo en desarrollo
-        // eslint-disable-next-line no-console
-        console.error("Login error:", error);
-      }
+      console.error("❌ Login error:", error);
+      console.error("📊 Error details:", {
+        message: error.message,
+        status: error.status,
+        code: error.code
+      });
       setError("Correo o contraseña incorrectos.");
       setLoading(false);
     } else {
+      console.log("✅ Login exitoso:", data);
       // Redirigir manualmente a la vista principal administrativa
       window.location.href = "/admin/dashboard";
     }

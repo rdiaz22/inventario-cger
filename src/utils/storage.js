@@ -117,4 +117,25 @@ export function isStoragePath(value) {
   return !!value && !/^https?:\/\//i.test(value) && !value.startsWith("data:");
 }
 
+// Devuelve una URL pública transformada (thumbnail servido por el CDN de Supabase)
+// No hace round-trip de firma y reduce drásticamente el peso para listas
+export function getThumbnailPublicUrl(pathOrUrl, { bucket = "activos", width = 240, quality = 70, resize = "cover" } = {}) {
+  if (!pathOrUrl) return "";
+  try {
+    // Normalizar como objeto dentro del bucket
+    let raw = String(pathOrUrl).trim();
+    raw = raw.replace(/^\/+/, "");
+    if (raw.startsWith("public/")) raw = raw.slice("public/".length);
+    if (raw.startsWith(`storage/v1/object/public/`)) raw = raw.slice(`storage/v1/object/public/`.length);
+    if (raw.startsWith(`${bucket}/`)) raw = raw.slice(`${bucket}/`.length);
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(raw, {
+      transform: { width, quality, resize }
+    });
+    return data?.publicUrl || "";
+  } catch (_) {
+    return "";
+  }
+}
+
 
