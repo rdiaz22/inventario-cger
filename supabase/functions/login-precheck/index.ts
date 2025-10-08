@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 type PrecheckRequest = {
   email?: string;
@@ -11,10 +10,25 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Almacenamiento en memoria para rate limiting
+const rateLimitStore = new Map<string, { attempts: number; lastAttempt: Date; blockedUntil?: Date }>();
+
 // Simple, pragmatic backoff window strategy
 const WINDOW_SECONDS = 300; // 5 minutes window
 const MAX_ATTEMPTS = 7; // up to 7 attempts per IP+email per window
 const BASE_LOCK_SECONDS = 60; // base lock 1 min, scales with extra attempts
+
+// Limpiar entradas antiguas periódicamente
+setInterval(() => {
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - WINDOW_SECONDS * 1000);
+  
+  for (const [key, data] of rateLimitStore.entries()) {
+    if (data.lastAttempt < windowStart && (!data.blockedUntil || data.blockedUntil < now)) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, 60000); // Limpiar cada minuto
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,12 +36,6 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-
     const body = (await req.json().catch(() => ({}))) as PrecheckRequest;
     const email = (body?.email || "").trim().toLowerCase();
     if (!email) {
@@ -44,58 +52,49 @@ serve(async (req) => {
 
     const key = `${email}:${ip}`;
     const now = new Date();
-    const windowStart = new Date(now.getTime() - WINDOW_SECONDS * 1000).toISOString();
+    const windowStart = new Date(now.getTime() - WINDOW_SECONDS * 1000);
 
-    // Read recent attempts in window
-    const { data: rows, error: readErr } = await supabaseAdmin
-      .from("auth_rate_limits")
-      .select("id, attempts, blocked_until, last_attempt")
-      .eq("key", key)
-      .gte("last_attempt", windowStart)
-      .order("last_attempt", { ascending: false })
-      .limit(1);
-
-    if (readErr) throw readErr;
-
-    const current = rows?.[0];
-    const blockedUntil = current?.blocked_until ? new Date(current.blocked_until) : null;
-    const isBlocked = blockedUntil ? blockedUntil.getTime() > now.getTime() : false;
-
-    if (isBlocked) {
-      const remaining = Math.max(0, Math.ceil((blockedUntil!.getTime() - now.getTime()) / 1000));
+    // Get current rate limit data
+    const current = rateLimitStore.get(key);
+    
+    // Check if blocked
+    if (current?.blockedUntil && current.blockedUntil > now) {
+      const remaining = Math.max(0, Math.ceil((current.blockedUntil.getTime() - now.getTime()) / 1000));
       return new Response(
         JSON.stringify({ ok: false, blocked: true, retryAfterSeconds: remaining }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
       );
     }
 
-    // Not blocked -> record one attempt and possibly block
-    const attempts = (current?.attempts || 0) + 1;
-    let newBlockedUntil: string | null = null;
+    // Reset attempts if outside window
+    const attempts = (current && current.lastAttempt > windowStart) ? current.attempts + 1 : 1;
+    
+    // Check if should block
+    let blockedUntil: Date | undefined;
     if (attempts > MAX_ATTEMPTS) {
-      const extra = attempts - MAX_ATTEMPTS; // 1,2,3...
-      const lockSeconds = BASE_LOCK_SECONDS * Math.min(10, extra); // step up to 10 minutes
-      newBlockedUntil = new Date(now.getTime() + lockSeconds * 1000).toISOString();
+      const extra = attempts - MAX_ATTEMPTS;
+      const lockSeconds = BASE_LOCK_SECONDS * Math.min(10, extra);
+      blockedUntil = new Date(now.getTime() + lockSeconds * 1000);
     }
 
-    const upsertPayload = {
-      key,
+    // Update rate limit store
+    rateLimitStore.set(key, {
       attempts,
-      last_attempt: now.toISOString(),
-      blocked_until: newBlockedUntil,
-      meta: { ip, email },
-    } as const;
+      lastAttempt: now,
+      blockedUntil
+    });
 
-    const { error: upsertErr } = await supabaseAdmin
-      .from("auth_rate_limits")
-      .upsert(upsertPayload, { onConflict: "key" });
-    if (upsertErr) throw upsertErr;
-
-    return new Response(JSON.stringify({ ok: true, blocked: false }), {
+    return new Response(JSON.stringify({ 
+      ok: true, 
+      blocked: false,
+      attempts,
+      maxAttempts: MAX_ATTEMPTS
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
+    console.error('Rate limit error:', error);
     return new Response(JSON.stringify({ ok: false, error: String(error) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
