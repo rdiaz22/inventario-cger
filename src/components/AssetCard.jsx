@@ -111,14 +111,10 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   const [thumbUrl, setThumbUrl] = useState("");
 
   useEffect(() => {
-    // Intentar thumbnail público con transform
-    const t = getThumbnailPublicUrl(asset.image_url, { width: 320, quality: 72 });
-    setThumbUrl(t);
-
-    // Fallback robusto: firmada con transform si el bucket es privado
+    // Estrategia confiable: usa URL firmada (o pública) sin transform, que sabemos funciona
     const resolve = async () => {
-      const url = await getSignedUrlIfNeeded(asset.image_url, { transform: { width: 320, quality: 72, resize: 'cover' } });
-      if (!t && url) setThumbUrl(url);
+      const url = await getSignedUrlIfNeeded(asset.image_url);
+      setThumbUrl(url);
       setImageResolvedUrl(url);
     };
     resolve();
