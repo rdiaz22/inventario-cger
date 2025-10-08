@@ -28,7 +28,7 @@ export function normalizeStoragePath(pathOrUrl, bucket = "activos") {
 }
 
 export async function getSignedUrlIfNeeded(pathOrUrl, options = {}) {
-  const { bucket = "activos", expiresIn = 900 } = options;
+  const { bucket = "activos", expiresIn = 900, transform } = options;
   if (!pathOrUrl) return "";
 
   // If it's an absolute URL but it's a Supabase Storage URL, parse it and try to
@@ -75,9 +75,9 @@ export async function getSignedUrlIfNeeded(pathOrUrl, options = {}) {
     try {
       const { data: sData, error: sErr } = await supabase.storage
         .from(bkt)
-        .createSignedUrl(objPath, expiresIn);
+        .createSignedUrl(objPath, expiresIn, transform ? { transform } : undefined);
       if (!sErr && sData?.signedUrl) return sData.signedUrl;
-      const { data: pData } = supabase.storage.from(bkt).getPublicUrl(objPath);
+      const { data: pData } = supabase.storage.from(bkt).getPublicUrl(objPath, transform ? { transform } : undefined);
       if (pData?.publicUrl) return pData.publicUrl;
     } catch (_) { /* ignore */ }
     return "";

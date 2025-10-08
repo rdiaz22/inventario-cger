@@ -111,12 +111,14 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   const [thumbUrl, setThumbUrl] = useState("");
 
   useEffect(() => {
-    // Thumbnail rápido para listas
+    // Intentar thumbnail público con transform
     const t = getThumbnailPublicUrl(asset.image_url, { width: 320, quality: 72 });
     setThumbUrl(t);
-    // Imagen completa (si hace falta en vistas detalladas al abrir card)
+
+    // Fallback robusto: firmada con transform si el bucket es privado
     const resolve = async () => {
-      const url = await getSignedUrlIfNeeded(asset.image_url);
+      const url = await getSignedUrlIfNeeded(asset.image_url, { transform: { width: 320, quality: 72, resize: 'cover' } });
+      if (!t && url) setThumbUrl(url);
       setImageResolvedUrl(url);
     };
     resolve();
