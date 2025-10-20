@@ -15,6 +15,7 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   const [dymoHeightMm, setDymoHeightMm] = useState(12); // altura configurable: 7, 12, 18
   const [barcodeFormat, setBarcodeFormat] = useState("CODE128"); // formato de código de barras
   const [showPrintOptions, setShowPrintOptions] = useState(false);
+  const [mobile12mmMode, setMobile12mmMode] = useState(false);
 
   // Eliminar handleCardClick
 
@@ -101,19 +102,19 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       switch (barcodeFormat) {
         case "CODE128":
           Object.assign(barcodeConfig, {
-            // Quiet zone ~1.2mm
-            margin: Math.round(1.2 * pxPerMm),
-            // Altura usable ~80% de la etiqueta
-            height: Math.round(targetPxHeight * 0.8),
-            // x-dimension ~0.25mm para móvil
-            width: Math.max(3, Math.round(0.25 * pxPerMm))
+            // Quiet zone: 1.2mm normal, 2.0mm en modo móvil
+            margin: Math.round((mobile12mmMode ? 2.0 : 1.2) * pxPerMm),
+            // Altura usable ~78–82%
+            height: Math.round(targetPxHeight * (mobile12mmMode ? 0.78 : 0.8)),
+            // x-dimension: 0.33mm en móvil, 0.25mm normal
+            width: Math.max(3, Math.round((mobile12mmMode ? 0.33 : 0.25) * pxPerMm))
           });
           break;
         case "CODE39":
           Object.assign(barcodeConfig, {
-            margin: Math.round(1.0 * pxPerMm),
-            height: Math.round(targetPxHeight * 0.8),
-            width: Math.max(3, Math.round(0.28 * pxPerMm))
+            margin: Math.round((mobile12mmMode ? 1.8 : 1.0) * pxPerMm),
+            height: Math.round(targetPxHeight * (mobile12mmMode ? 0.76 : 0.8)),
+            width: Math.max(3, Math.round((mobile12mmMode ? 0.34 : 0.28) * pxPerMm))
           });
           break;
         case "EAN13":
@@ -292,6 +293,18 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
                   <option value={12}>12 mm (Estándar)</option>
                   <option value={18}>18 mm (Grande)</option>
                 </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  id="mobile12"
+                  type="checkbox"
+                  checked={mobile12mmMode}
+                  onChange={(e) => setMobile12mmMode(e.target.checked)}
+                />
+                <label htmlFor="mobile12" className="text-xs text-gray-700">
+                  Modo móvil 12 mm (barras más anchas y mayor margen)
+                </label>
               </div>
               
               <div className="flex gap-2">
