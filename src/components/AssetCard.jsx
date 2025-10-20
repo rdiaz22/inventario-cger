@@ -66,6 +66,11 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     const barcodeValue = asset.codigo || String(asset.id || "");
 
     let barcodeDataUrl = "";
+    // Objetivo de alta resolución para impresoras térmicas (mejor definición)
+    const targetDpi = 600; // 300-600; usamos 600 para mayor nitidez
+    const pxPerMm = targetDpi / 25.4;
+    const targetPxWidth = Math.max(200, Math.round(labelWidthMm * pxPerMm));
+    const targetPxHeight = Math.max(80, Math.round(labelHeightMm * pxPerMm));
     if (barcodeFormat === "DATAMATRIX") {
       // Data Matrix rectangular optimizado para 24x12mm
       // Nota: usar contenido corto para reducir módulos
@@ -95,21 +100,47 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
 
       switch (barcodeFormat) {
         case "CODE128":
-          Object.assign(barcodeConfig, { margin: 8, height: 100, width: 1.4 });
+          Object.assign(barcodeConfig, {
+            // Quiet zone ~1.2mm
+            margin: Math.round(1.2 * pxPerMm),
+            // Altura usable ~80% de la etiqueta
+            height: Math.round(targetPxHeight * 0.8),
+            // x-dimension ~0.25mm para móvil
+            width: Math.max(3, Math.round(0.25 * pxPerMm))
+          });
           break;
         case "CODE39":
-          Object.assign(barcodeConfig, { margin: 6, height: 90, width: 1.6 });
+          Object.assign(barcodeConfig, {
+            margin: Math.round(1.0 * pxPerMm),
+            height: Math.round(targetPxHeight * 0.8),
+            width: Math.max(3, Math.round(0.28 * pxPerMm))
+          });
           break;
         case "EAN13":
-          Object.assign(barcodeConfig, { margin: 10, height: 80, width: 1.2 });
+          Object.assign(barcodeConfig, {
+            margin: Math.round(1.4 * pxPerMm),
+            height: Math.round(targetPxHeight * 0.75),
+            width: Math.max(2, Math.round(0.22 * pxPerMm))
+          });
           break;
         case "EAN8":
-          Object.assign(barcodeConfig, { margin: 8, height: 85, width: 1.3 });
+          Object.assign(barcodeConfig, {
+            margin: Math.round(1.2 * pxPerMm),
+            height: Math.round(targetPxHeight * 0.78),
+            width: Math.max(2, Math.round(0.24 * pxPerMm))
+          });
           break;
         default:
-          Object.assign(barcodeConfig, { margin: 8, height: 100, width: 1.4 });
+          Object.assign(barcodeConfig, {
+            margin: Math.round(1.2 * pxPerMm),
+            height: Math.round(targetPxHeight * 0.8),
+            width: Math.max(3, Math.round(0.25 * pxPerMm))
+          });
       }
 
+      // Ajustar el tamaño del canvas para alta resolución antes de dibujar
+      canvas.width = targetPxWidth;
+      canvas.height = Math.round(targetPxHeight * 0.85);
       JsBarcode(canvas, barcodeValue, barcodeConfig);
       barcodeDataUrl = canvas.toDataURL("image/png");
     }
@@ -122,15 +153,9 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     const usableWidth = labelWidthMm - marginX * 2;
     const usableHeight = labelHeightMm - marginY * 2;
 
-    // Añadir barcode ocupando casi toda el área útil (más espacio para el código)
-    pdf.addImage(
-      barcodeDataUrl,
-      "PNG",
-      marginX,
-      marginY,
-      usableWidth,
-      usableHeight * 0.85
-    );
+    // Añadir barcode ocupando casi toda el área útil; priorizar contraste y escala
+    // Para mejorar nitidez en impresión, renderizamos imagen fuente a alta resolución
+    pdf.addImage(barcodeDataUrl, "PNG", marginX, marginY, usableWidth, usableHeight * 0.82);
 
     // Texto opcional: si es Data Matrix, texto más pequeño para dejar más área al símbolo
     const textSize = barcodeFormat === 'DATAMATRIX'
