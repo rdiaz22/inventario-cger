@@ -12,6 +12,8 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   // const navigate = useNavigate(); // Eliminar esta línea
   const [showQR, setShowQR] = useState(false);
   const [dymoHeightMm, setDymoHeightMm] = useState(12); // altura configurable: 7, 12, 18
+  const [barcodeFormat, setBarcodeFormat] = useState("CODE128"); // formato de código de barras
+  const [showPrintOptions, setShowPrintOptions] = useState(false);
 
   // Eliminar handleCardClick
 
@@ -62,45 +64,84 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     const canvas = document.createElement("canvas");
     const barcodeValue = asset.codigo || String(asset.id || "");
 
-    // Escala: generar un bitmap grande y luego ajustar en PDF para buena definición
-    JsBarcode(canvas, barcodeValue, {
-      format: "CODE128",
+    // Configuración optimizada según el formato elegido
+    const barcodeConfig = {
+      format: barcodeFormat,
       displayValue: false,
-      // Mayor "quiet zone" para mejorar lectura con cámara
-      margin: 6,
-      // Más alto y barras ligeramente más finas para mejorar contraste/espaciado percibido
-      height: 90,
-      width: 1.6,
-    });
+      background: "#ffffff",
+      lineColor: "#000000",
+      fontSize: 0,
+      textMargin: 0
+    };
+
+    // Configuraciones específicas por formato
+    switch (barcodeFormat) {
+      case "CODE128":
+        Object.assign(barcodeConfig, {
+          margin: 8,
+          height: 100,
+          width: 1.4
+        });
+        break;
+      case "CODE39":
+        Object.assign(barcodeConfig, {
+          margin: 6,
+          height: 90,
+          width: 1.6
+        });
+        break;
+      case "EAN13":
+        Object.assign(barcodeConfig, {
+          margin: 10,
+          height: 80,
+          width: 1.2
+        });
+        break;
+      case "EAN8":
+        Object.assign(barcodeConfig, {
+          margin: 8,
+          height: 85,
+          width: 1.3
+        });
+        break;
+      default:
+        Object.assign(barcodeConfig, {
+          margin: 8,
+          height: 100,
+          width: 1.4
+        });
+    }
+
+    JsBarcode(canvas, barcodeValue, barcodeConfig);
 
     const barcodeDataUrl = canvas.toDataURL("image/png");
 
-    // Márgenes en mm dentro de la etiqueta (ligeramente mayores para alturas más grandes)
-    const marginX = labelHeightMm >= 12 ? 1.2 : 1.0;
-    const marginY = labelHeightMm >= 12 ? 0.8 : 0.6;
+    // Márgenes optimizados para mejor escaneo
+    const marginX = labelHeightMm >= 12 ? 1.0 : 0.8;
+    const marginY = labelHeightMm >= 12 ? 0.6 : 0.4;
 
     // Área útil
     const usableWidth = labelWidthMm - marginX * 2;
     const usableHeight = labelHeightMm - marginY * 2;
 
-    // Añadir barcode ocupando casi toda el área útil
+    // Añadir barcode ocupando casi toda el área útil (más espacio para el código)
     pdf.addImage(
       barcodeDataUrl,
       "PNG",
       marginX,
       marginY,
       usableWidth,
-      usableHeight * 0.8
+      usableHeight * 0.85
     );
 
-    // Texto con tamaño proporcional a la altura (más cerca de las barras)
-    const textSize = labelHeightMm >= 18 ? 4.5 : labelHeightMm >= 12 ? 4.0 : 3.5;
+    // Texto más pequeño y mejor posicionado
+    const textSize = labelHeightMm >= 18 ? 4.0 : labelHeightMm >= 12 ? 3.5 : 3.0;
     pdf.setFontSize(textSize);
     pdf.setFont(undefined, "bold");
     pdf.text(
       barcodeValue,
       labelWidthMm / 2,
-      labelHeightMm - (labelHeightMm >= 12 ? 0.6 : 0.5),
+      labelHeightMm - (labelHeightMm >= 12 ? 0.8 : 0.6),
       { align: "center" }
     );
 
@@ -158,7 +199,7 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       </div>
 
       {/* Acciones */}
-      <div className="flex flex-col items-center gap-2 flex-shrink-0">
+      <div className="relative flex flex-col items-center gap-2 flex-shrink-0">
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -190,12 +231,74 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
           </select>
         </div>
         <button
-          onClick={handlePrintDymo}
+          onClick={() => setShowPrintOptions(!showPrintOptions)}
           className="text-sm text-purple-600 hover:underline flex items-center gap-1 whitespace-nowrap"
         >
           <FaPrint />
           DYMO 24x{dymoHeightMm} mm
         </button>
+        
+        {/* Opciones avanzadas de impresión */}
+        {showPrintOptions && (
+          <div className="absolute top-full right-0 mt-2 bg-white border rounded-lg shadow-lg p-3 z-10 min-w-64">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Formato de código de barras:
+                </label>
+                <select
+                  value={barcodeFormat}
+                  onChange={(e) => setBarcodeFormat(e.target.value)}
+                  className="w-full text-xs border rounded px-2 py-1"
+                >
+                  <option value="CODE128">CODE128 (Recomendado)</option>
+                  <option value="CODE39">CODE39</option>
+                  <option value="EAN13">EAN13</option>
+                  <option value="EAN8">EAN8</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Altura de etiqueta:
+                </label>
+                <select
+                  value={dymoHeightMm}
+                  onChange={(e) => setDymoHeightMm(Number(e.target.value))}
+                  className="w-full text-xs border rounded px-2 py-1"
+                >
+                  <option value={7}>7 mm (Muy pequeña)</option>
+                  <option value={12}>12 mm (Estándar)</option>
+                  <option value={18}>18 mm (Grande)</option>
+                </select>
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={handlePrintDymo}
+                  className="flex-1 bg-purple-600 text-white text-xs px-3 py-2 rounded hover:bg-purple-700"
+                >
+                  Imprimir
+                </button>
+                <button
+                  onClick={() => setShowPrintOptions(false)}
+                  className="flex-1 bg-gray-300 text-gray-700 text-xs px-3 py-2 rounded hover:bg-gray-400"
+                >
+                  Cancelar
+                </button>
+              </div>
+              
+              <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                <strong>Consejos:</strong>
+                <ul className="mt-1 space-y-1">
+                  <li>• CODE128 es el más legible para escáneres</li>
+                  <li>• Etiquetas de 12mm+ tienen mejor escaneo</li>
+                  <li>• Mantén la impresora limpia</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Etiqueta QR para impresión */}
