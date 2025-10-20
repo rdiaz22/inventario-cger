@@ -5,6 +5,7 @@ import QRCode from "react-qr-code";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import JsBarcode from "jsbarcode";
+import bwipjs from "bwip-js";
 import { toDataURL } from 'qrcode'; // Agregar esta importación
 import { getSignedUrlIfNeeded, getThumbnailPublicUrl } from "../utils/storage";
 
@@ -60,61 +61,58 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       format: [labelWidthMm, labelHeightMm],
     });
 
-    // Generar código de barras Code128 en un canvas
+    // Generar símbolo en un canvas
     const canvas = document.createElement("canvas");
     const barcodeValue = asset.codigo || String(asset.id || "");
 
-    // Configuración optimizada según el formato elegido
-    const barcodeConfig = {
-      format: barcodeFormat,
-      displayValue: false,
-      background: "#ffffff",
-      lineColor: "#000000",
-      fontSize: 0,
-      textMargin: 0
-    };
+    let barcodeDataUrl = "";
+    if (barcodeFormat === "DATAMATRIX") {
+      // Data Matrix rectangular optimizado para 24x12mm
+      // Nota: usar contenido corto para reducir módulos
+      bwipjs.toCanvas(canvas, {
+        bcid: 'datamatrix',
+        text: barcodeValue,
+        // módulos pequeños para caber en 12mm de alto
+        scale: 2, // escala del módulo
+        rows: 16, // sugerido; bwip puede ajustar
+        columns: 48,
+        includetext: false,
+        padding: 8, // quiet zone
+        backgroundcolor: 'FFFFFF',
+        monochrome: true
+      });
+      barcodeDataUrl = canvas.toDataURL('image/png');
+    } else {
+      // Configuración optimizada según el formato elegido (lineal)
+      const barcodeConfig = {
+        format: barcodeFormat,
+        displayValue: false,
+        background: "#ffffff",
+        lineColor: "#000000",
+        fontSize: 0,
+        textMargin: 0
+      };
 
-    // Configuraciones específicas por formato
-    switch (barcodeFormat) {
-      case "CODE128":
-        Object.assign(barcodeConfig, {
-          margin: 8,
-          height: 100,
-          width: 1.4
-        });
-        break;
-      case "CODE39":
-        Object.assign(barcodeConfig, {
-          margin: 6,
-          height: 90,
-          width: 1.6
-        });
-        break;
-      case "EAN13":
-        Object.assign(barcodeConfig, {
-          margin: 10,
-          height: 80,
-          width: 1.2
-        });
-        break;
-      case "EAN8":
-        Object.assign(barcodeConfig, {
-          margin: 8,
-          height: 85,
-          width: 1.3
-        });
-        break;
-      default:
-        Object.assign(barcodeConfig, {
-          margin: 8,
-          height: 100,
-          width: 1.4
-        });
+      switch (barcodeFormat) {
+        case "CODE128":
+          Object.assign(barcodeConfig, { margin: 8, height: 100, width: 1.4 });
+          break;
+        case "CODE39":
+          Object.assign(barcodeConfig, { margin: 6, height: 90, width: 1.6 });
+          break;
+        case "EAN13":
+          Object.assign(barcodeConfig, { margin: 10, height: 80, width: 1.2 });
+          break;
+        case "EAN8":
+          Object.assign(barcodeConfig, { margin: 8, height: 85, width: 1.3 });
+          break;
+        default:
+          Object.assign(barcodeConfig, { margin: 8, height: 100, width: 1.4 });
+      }
+
+      JsBarcode(canvas, barcodeValue, barcodeConfig);
+      barcodeDataUrl = canvas.toDataURL("image/png");
     }
-
-    JsBarcode(canvas, barcodeValue, barcodeConfig);
-
-    const barcodeDataUrl = canvas.toDataURL("image/png");
 
     // Márgenes optimizados para mejor escaneo
     const marginX = labelHeightMm >= 12 ? 1.0 : 0.8;
@@ -134,16 +132,13 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       usableHeight * 0.85
     );
 
-    // Texto más pequeño y mejor posicionado
-    const textSize = labelHeightMm >= 18 ? 4.0 : labelHeightMm >= 12 ? 3.5 : 3.0;
+    // Texto opcional: si es Data Matrix, texto más pequeño para dejar más área al símbolo
+    const textSize = barcodeFormat === 'DATAMATRIX'
+      ? (labelHeightMm >= 12 ? 2.8 : 2.4)
+      : (labelHeightMm >= 18 ? 4.0 : labelHeightMm >= 12 ? 3.5 : 3.0);
     pdf.setFontSize(textSize);
     pdf.setFont(undefined, "bold");
-    pdf.text(
-      barcodeValue,
-      labelWidthMm / 2,
-      labelHeightMm - (labelHeightMm >= 12 ? 0.8 : 0.6),
-      { align: "center" }
-    );
+    pdf.text(barcodeValue, labelWidthMm / 2, labelHeightMm - 0.8, { align: "center" });
 
     pdf.save(`dymo-${barcodeValue}.pdf`);
   };
@@ -255,6 +250,7 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
                   <option value="CODE39">CODE39</option>
                   <option value="EAN13">EAN13</option>
                   <option value="EAN8">EAN8</option>
+                  <option value="DATAMATRIX">Data Matrix (12mm)</option>
                 </select>
               </div>
               
@@ -294,6 +290,7 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
                   <li>• CODE128 es el más legible para escáneres</li>
                   <li>• Etiquetas de 12mm+ tienen mejor escaneo</li>
                   <li>• Mantén la impresora limpia</li>
+                  <li>• Para 12mm, prueba Data Matrix</li>
                 </ul>
               </div>
             </div>

@@ -121,7 +121,8 @@ const BarcodeScanner = ({ onScan }) => {
             'ean_reader',
             'ean_8_reader',
             'code_93_reader',
-            'codabar_reader'
+            'codabar_reader',
+            'datamatrix_reader'
           ]
         });
         
