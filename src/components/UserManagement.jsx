@@ -84,6 +84,9 @@ const UserManagement = () => {
 
     try {
       if (editingUser) {
+        // Verificar si el email cambió
+        const emailChanged = editingUser.email !== formData.email;
+        
         // Actualizar usuario existente
         const { error } = await supabase
           .from("system_users")
@@ -93,7 +96,29 @@ const UserManagement = () => {
         if (error) {
           toast.error("Error al actualizar usuario: " + error.message);
         } else {
-          toast.success("Usuario actualizado exitosamente");
+          // Si el email cambió, sincronizar automáticamente
+          if (emailChanged) {
+            try {
+              const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-user-email', {
+                body: {
+                  user_id: editingUser.id,
+                  new_email: formData.email
+                }
+              });
+
+              if (syncError || syncData?.success === false) {
+                toast.warning("Usuario actualizado, pero el email de login no se sincronizó. Usa el botón de sincronización.");
+              } else {
+                toast.success("Usuario actualizado y email sincronizado exitosamente");
+              }
+            } catch (syncError) {
+              console.error("Error sincronizando email:", syncError);
+              toast.warning("Usuario actualizado, pero el email de login no se sincronizó. Usa el botón de sincronización.");
+            }
+          } else {
+            toast.success("Usuario actualizado exitosamente");
+          }
+          
           setEditingUser(null);
           resetForm();
           fetchUsersAndRoles();
