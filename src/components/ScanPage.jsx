@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BarcodeScanner from '../components/BarcodeScanner';
+import PrintingTips from '../components/PrintingTips';
 import { supabase } from '../supabaseClient';
 import toast from 'react-hot-toast';
 
@@ -277,7 +278,10 @@ const ScanPage = () => {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-semibold">Escanear códigos QR</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-semibold">Escanear códigos QR</h1>
+          <PrintingTips />
+        </div>
         <button
           onClick={handleGoHome}
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center gap-2"

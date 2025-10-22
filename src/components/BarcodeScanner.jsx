@@ -73,7 +73,13 @@ const BarcodeScanner = ({ onScan }) => {
         codeReaderRef.current = codeReader;
 
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
+          video: { 
+            facingMode: 'environment',
+            // Configuración optimizada para códigos de barras pequeños
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            focusMode: 'continuous'
+          } 
         });
         
         if (!mounted) {
@@ -87,6 +93,7 @@ const BarcodeScanner = ({ onScan }) => {
           videoRef.current.srcObject = stream;
         }
 
+        // Configurar el lector con parámetros optimizados para códigos pequeños
         codeReader.decodeFromVideoDevice(null, videoRef.current, (result, error) => {
           if (result && mounted && !hasScannedRef.current) {
             const code = result.getText();
@@ -104,6 +111,19 @@ const BarcodeScanner = ({ onScan }) => {
               onScan(code);
             }
           }
+        }, {
+          // Configuración adicional para mejorar la detección
+          delayBetweenScanningAttempts: 100,
+          // Intentar múltiples formatos
+          formatsToSupport: [
+            'code_128_reader',
+            'code_39_reader', 
+            'ean_reader',
+            'ean_8_reader',
+            'code_93_reader',
+            'codabar_reader',
+            'datamatrix_reader'
+          ]
         });
         
       } catch (error) {

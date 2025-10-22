@@ -15,6 +15,7 @@ import Configuracion from './components/Configuracion';
 import Auditorias from './components/Auditorias';
 import { Toaster } from 'react-hot-toast';
 import Mantenimiento from './components/Mantenimiento';
+import LabelTest from './components/LabelTest';
   
 function App() {
   const [session, setSession] = useState(null);
@@ -71,6 +72,11 @@ function App() {
             <Route path="/admin/mantenimiento" element={
               <Layout onCategoriasClick={() => setIsCategoriasModalOpen(true)}>
                 <Mantenimiento />
+              </Layout>
+            } />
+            <Route path="/admin/label-test" element={
+              <Layout onCategoriasClick={() => setIsCategoriasModalOpen(true)}>
+                <LabelTest />
               </Layout>
             } />
             <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
