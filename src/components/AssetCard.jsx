@@ -191,7 +191,7 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   return (
     <div
       onClick={onClick} // Usar la prop onClick
-      className="cursor-pointer rounded-xl border shadow-sm hover:shadow-md transition-shadow p-4 bg-white flex flex-col sm:flex-row items-center sm:items-start gap-4 w-full min-w-0"
+      className="cursor-pointer rounded-xl border shadow-sm hover:shadow-md transition-shadow p-4 bg-white flex flex-col sm:flex-row items-center sm:items-start gap-4 w-full min-w-0 relative"
     >
       {/* Imagen */}
       <img
@@ -336,31 +336,20 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
         )}
       </div>
 
-      {/* Etiqueta QR para impresión */}
+      {/* Popover QR: flotante para evitar solapamientos en grillas */}
       {showQR && (
         <div
           id={`label-${asset.id}`}
-          style={{
-            width: 300,
-            height: 200,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "1px solid #ccc",
-            background: "#fff",
-            padding: 16,
-            boxSizing: "border-box",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
-          }}
+          className="absolute top-full right-4 mt-3 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-4 w-[260px] max-w-[80vw]"
           onClick={(e) => e.stopPropagation()}
         >
-          <QRCode value={`${window.location.origin}/activos/${asset.id}`} size={150} />
-          <p style={{ margin: "8px 0 0 0", fontSize: 16, fontWeight: "bold", letterSpacing: 1 }}>
-            {asset.codigo}
-          </p>
-          <p style={{ margin: 0, fontSize: 12 }}>Propiedad de CGER, La Palma</p>
+          <div className="flex flex-col items-center">
+            <QRCode value={`${window.location.origin}/activos/${asset.id}`} size={150} />
+            <p className="mt-2 text-base font-semibold tracking-wide text-gray-900">
+              {asset.codigo}
+            </p>
+            <p className="text-xs text-gray-600">Propiedad de CGER, La Palma</p>
+          </div>
         </div>
       )}
     </div>
