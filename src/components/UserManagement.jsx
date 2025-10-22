@@ -8,7 +8,8 @@ import {
   XCircle,
   Key,
   Eye,
-  EyeOff
+  EyeOff,
+  RefreshCw
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -220,6 +221,36 @@ const UserManagement = () => {
     }
   };
 
+  const handleSyncEmail = async (user) => {
+    if (!confirm(`¿Sincronizar el email de ${user.first_name} ${user.last_name}?\n\nEsto actualizará el email en el sistema de autenticación para que coincida con el email actual en la base de datos.`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-user-email', {
+        body: {
+          user_id: user.id,
+          new_email: user.email
+        }
+      });
+
+      if (error) {
+        toast.error("Error al sincronizar email: " + error.message);
+      } else if (data?.success === false) {
+        toast.error("Error al sincronizar email: " + data?.error);
+      } else {
+        toast.success("Email sincronizado exitosamente");
+        fetchUsersAndRoles();
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Error inesperado: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   
 
   const handleDelete = async (userId) => {
@@ -389,6 +420,13 @@ const UserManagement = () => {
                         title="Cambiar contraseña"
                       >
                         <Key className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleSyncEmail(user)}
+                        className="text-green-600 hover:text-green-900"
+                        title="Sincronizar email"
+                      >
+                        <RefreshCw className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(user.id)}
