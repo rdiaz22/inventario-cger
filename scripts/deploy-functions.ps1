@@ -57,6 +57,8 @@ try {
   supabase functions deploy create-user --project-ref $ProjectRef | Out-Null
   Write-Host "📤 Desplegando delete-user" -ForegroundColor Cyan
   supabase functions deploy delete-user --project-ref $ProjectRef | Out-Null
+  Write-Host "📤 Desplegando update-user-password" -ForegroundColor Cyan
+  supabase functions deploy update-user-password --project-ref $ProjectRef | Out-Null
 
   Write-Host "🎉 Despliegue completado" -ForegroundColor Green
 } catch {
