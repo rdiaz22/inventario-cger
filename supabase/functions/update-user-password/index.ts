@@ -16,8 +16,8 @@ serve(async (req) => {
   try {
     // Create a Supabase client with the Auth context of the function
     const supabaseClient = createClient(
-      (Deno.env.get('SUPABASE_URL') ?? Deno.env.get('PROJECT_URL') ?? ''),
-      (Deno.env.get('SUPABASE_ANON_KEY') ?? ''),
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
@@ -109,8 +109,8 @@ serve(async (req) => {
 
     // Create admin client to update user password
     const supabaseAdmin = createClient(
-      (Deno.env.get('SUPABASE_URL') ?? Deno.env.get('PROJECT_URL') ?? ''),
-      (Deno.env.get('SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''),
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
