@@ -88,8 +88,24 @@ serve(async (req) => {
       )
     }
 
-    // Parse the request body
-    const { user_id, new_password } = await req.json()
+    // Parse the request body with error handling
+    let requestBody;
+    try {
+      const bodyText = await req.text();
+      console.log('Request body:', bodyText);
+      requestBody = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid JSON in request body' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+    
+    const { user_id, new_password } = requestBody
 
     if (!user_id || !new_password) {
       return new Response(
