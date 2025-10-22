@@ -32,13 +32,14 @@ const Sidebar = ({ onCategoriasClick }) => {
       
       // Obtener nombre de la empresa
       if (user) {
-        const { data: companyData } = await supabase
+        const { data: companyRow } = await supabase
           .from('company_config')
           .select('company_name')
-          .limit(1);
+          .limit(1)
+          .single();
         
-        if (companyData && companyData.length > 0) {
-          setCompanyName(companyData[0].company_name);
+        if (companyRow?.company_name) {
+          setCompanyName(companyRow.company_name);
         }
       }
     };
