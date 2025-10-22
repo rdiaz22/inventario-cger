@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { 
   Users, 
@@ -10,7 +11,9 @@ import {
   UserCheck,
   Globe,
   FileText,
-  Activity
+  Activity,
+  ArrowLeft,
+  Home
 } from "lucide-react";
 import toast from "react-hot-toast";
 import UserManagement from "./UserManagement";
@@ -19,6 +22,7 @@ import AdvancedRoleManagement from "./AdvancedRoleManagement";
 import ConfigAuditLog from "./ConfigAuditLog";
 
 const Configuracion = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("empresa");
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
@@ -146,10 +150,21 @@ const Configuracion = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Configuración del Sistema</h1>
-          <p className="mt-2 text-gray-600">
-            Gestiona la configuración de usuarios, empresa, notificaciones y sistema
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Configuración del Sistema</h1>
+              <p className="mt-2 text-gray-600">
+                Gestiona la configuración de usuarios, empresa, notificaciones y sistema
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/admin/dashboard')}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Home className="h-4 w-4" />
+              Volver al Inicio
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}

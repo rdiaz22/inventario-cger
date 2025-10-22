@@ -5,7 +5,10 @@ import {
   Edit, 
   Trash2, 
   CheckCircle,
-  XCircle
+  XCircle,
+  Key,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -15,6 +18,13 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [showAddUser, setShowAddUser] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -156,6 +166,58 @@ const UserManagement = () => {
       is_active: user.is_active
     });
     setShowAddUser(true);
+  };
+
+  const handleChangePassword = (user) => {
+    setEditingUser(user);
+    setPasswordData({
+      newPassword: "",
+      confirmPassword: ""
+    });
+    setShowPasswordModal(true);
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        toast.error("Las contraseñas no coinciden");
+        return;
+      }
+
+      if (passwordData.newPassword.length < 6) {
+        toast.error("La contraseña debe tener al menos 6 caracteres");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-user-password', {
+        body: {
+          user_id: editingUser.id,
+          new_password: passwordData.newPassword
+        }
+      });
+
+      if (error) {
+        toast.error("Error al cambiar contraseña: " + error.message);
+      } else if (data?.success === false) {
+        toast.error("Error al cambiar contraseña: " + data?.error);
+      } else {
+        toast.success("Contraseña cambiada exitosamente");
+        setShowPasswordModal(false);
+        setPasswordData({
+          newPassword: "",
+          confirmPassword: ""
+        });
+        setEditingUser(null);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Error inesperado: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   
@@ -320,6 +382,13 @@ const UserManagement = () => {
                         title="Editar usuario"
                       >
                         <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleChangePassword(user)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Cambiar contraseña"
+                      >
+                        <Key className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(user.id)}
@@ -524,6 +593,127 @@ const UserManagement = () => {
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {loading ? 'Guardando...' : (editingUser ? 'Actualizar' : 'Crear')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para cambiar contraseña */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Cambiar Contraseña
+              </h3>
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordData({
+                    newPassword: "",
+                    confirmPassword: ""
+                  });
+                  setEditingUser(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+              <div className="mb-4">
+                <p className="text-sm text-gray-600">
+                  Cambiando contraseña para: <span className="font-medium">{editingUser?.first_name} {editingUser?.last_name}</span>
+                </p>
+                <p className="text-sm text-gray-500">{editingUser?.email}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nueva contraseña *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData(prev => ({
+                      ...prev,
+                      newPassword: e.target.value
+                    }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirmar contraseña *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData(prev => ({
+                      ...prev,
+                      confirmPassword: e.target.value
+                    }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setPasswordData({
+                      newPassword: "",
+                      confirmPassword: ""
+                    });
+                    setEditingUser(null);
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {loading ? 'Cambiando...' : 'Cambiar Contraseña'}
                 </button>
               </div>
             </form>
