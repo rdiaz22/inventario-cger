@@ -91,7 +91,22 @@ serve(async (req) => {
     // Parse the request body with error handling
     let requestBody;
     try {
-      requestBody = await req.json();
+      const bodyText = await req.text();
+      console.log('Raw body text:', bodyText);
+      console.log('Body length:', bodyText.length);
+      
+      if (!bodyText || bodyText.trim() === '') {
+        console.log('Empty body received');
+        return new Response(
+          JSON.stringify({ success: false, error: 'Request body is empty' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+      
+      requestBody = JSON.parse(bodyText);
       console.log('Parsed request body:', requestBody);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);

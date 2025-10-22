@@ -193,7 +193,6 @@ const UserManagement = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('update-user-password', {
-        headers: { 'Content-Type': 'application/json' },
         body: {
           user_id: editingUser.id,
           new_password: passwordData.newPassword
