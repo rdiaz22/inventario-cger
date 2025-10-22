@@ -37,35 +37,31 @@ if (-not $SupabaseUrl -or -not $ServiceRoleKey) {
 }
 
 Push-Location (Join-Path $PSScriptRoot "..")
-try {
-  # Login si hace falta (no interactivo si ya hay sesión)
-  Write-Host "🔐 Verificando sesión Supabase CLI..." -ForegroundColor Cyan
-  supabase projects list | Out-Null
 
-  # Setear variables para funciones (secrets)
-  if ($SupabaseUrl) {
-    Write-Host "🔧 Seteando secret SUPABASE_URL" -ForegroundColor Cyan
-    supabase secrets set SUPABASE_URL=$SupabaseUrl --project-ref $ProjectRef | Out-Null
-  }
-  if ($ServiceRoleKey) {
-    Write-Host "🔧 Seteando secret SUPABASE_SERVICE_ROLE_KEY" -ForegroundColor Cyan
-    supabase secrets set SUPABASE_SERVICE_ROLE_KEY=$ServiceRoleKey --project-ref $ProjectRef | Out-Null
-  }
+# Verificar sesión (si no hay, el CLI pedirá login de forma interactiva)
+Write-Host "🔐 Verificando sesión Supabase CLI..." -ForegroundColor Cyan
+supabase projects list | Out-Null
 
-  # Desplegar funciones
-  Write-Host "📤 Desplegando create-user" -ForegroundColor Cyan
-  supabase functions deploy create-user --project-ref $ProjectRef | Out-Null
-  Write-Host "📤 Desplegando delete-user" -ForegroundColor Cyan
-  supabase functions deploy delete-user --project-ref $ProjectRef | Out-Null
-  Write-Host "📤 Desplegando update-user-password" -ForegroundColor Cyan
-  supabase functions deploy update-user-password --project-ref $ProjectRef | Out-Null
-
-  Write-Host "🎉 Despliegue completado" -ForegroundColor Green
-} catch {
-  Write-Host "❌ Error en el despliegue: $($_.Exception.Message)" -ForegroundColor Red
-  exit 1
-} finally {
-  Pop-Location
+# Setear variables para funciones (secrets) si fueron provistas
+if ($SupabaseUrl) {
+  Write-Host "🔧 Seteando secret SUPABASE_URL" -ForegroundColor Cyan
+  supabase secrets set SUPABASE_URL=$SupabaseUrl --project-ref $ProjectRef | Out-Null
 }
+if ($ServiceRoleKey) {
+  Write-Host "🔧 Seteando secret SUPABASE_SERVICE_ROLE_KEY" -ForegroundColor Cyan
+  supabase secrets set SUPABASE_SERVICE_ROLE_KEY=$ServiceRoleKey --project-ref $ProjectRef | Out-Null
+}
+
+# Desplegar funciones
+Write-Host "📤 Desplegando create-user" -ForegroundColor Cyan
+supabase functions deploy create-user --project-ref $ProjectRef | Out-Null
+Write-Host "📤 Desplegando delete-user" -ForegroundColor Cyan
+supabase functions deploy delete-user --project-ref $ProjectRef | Out-Null
+Write-Host "📤 Desplegando update-user-password" -ForegroundColor Cyan
+supabase functions deploy update-user-password --project-ref $ProjectRef | Out-Null
+
+Write-Host "🎉 Despliegue completado" -ForegroundColor Green
+
+Pop-Location
 
 
