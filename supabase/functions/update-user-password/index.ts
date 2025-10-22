@@ -91,17 +91,7 @@ serve(async (req) => {
     // Parse the request body with error handling
     let requestBody;
     try {
-      const bodyText = await req.text();
-      console.log('Request body text:', bodyText);
-      console.log('Request body length:', bodyText.length);
-      
-      if (!bodyText || bodyText.trim() === '') {
-        console.log('Empty body, trying to get JSON directly...');
-        requestBody = await req.json();
-      } else {
-        requestBody = JSON.parse(bodyText);
-      }
-      
+      requestBody = await req.json();
       console.log('Parsed request body:', requestBody);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
