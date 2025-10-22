@@ -193,6 +193,7 @@ const UserManagement = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('update-user-password', {
+        headers: { 'Content-Type': 'application/json' },
         body: {
           user_id: editingUser.id,
           new_password: passwordData.newPassword
@@ -623,7 +624,7 @@ const UserManagement = () => {
               </button>
             </div>
 
-            <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+            <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4" autoComplete="on">
               <div className="mb-4">
                 <p className="text-sm text-gray-600">
                   Cambiando contraseña para: <span className="font-medium">{editingUser?.first_name} {editingUser?.last_name}</span>
