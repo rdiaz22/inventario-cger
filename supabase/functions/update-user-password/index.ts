@@ -14,6 +14,10 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Function started, checking environment variables...');
+    console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL') ? 'SET' : 'NOT SET');
+    console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'SET' : 'NOT SET');
+    
     // Create a Supabase client with the Auth context of the function
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
