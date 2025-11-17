@@ -12,10 +12,9 @@ import { getSignedUrlIfNeeded, getThumbnailPublicUrl } from "../utils/storage";
 const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   // const navigate = useNavigate(); // Eliminar esta línea
   const [showQR, setShowQR] = useState(false);
-  const [dymoHeightMm, setDymoHeightMm] = useState(20); // altura configurable: 7, 12, 18, 20
+  const DYMO_HEIGHT_MM = 20; // Altura fija de 20 mm para etiquetas DYMO
   const [barcodeFormat, setBarcodeFormat] = useState("CODE128"); // formato de código de barras
   const [showPrintOptions, setShowPrintOptions] = useState(false);
-  const [mobile12mmMode, setMobile12mmMode] = useState(false);
 
   // Eliminar handleCardClick
 
@@ -46,13 +45,12 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
 
     pdf.setFontSize(12);
     pdf.setFont(undefined, "bold");
-    pdf.text(asset.codigo || "", textStartX, centerY - 1, { align: "left" });
+    pdf.text(asset.codigo || "", textStartX, centerY - 3, { align: "left" });
 
     pdf.setFontSize(9);
     pdf.setFont(undefined, "normal");
-    pdf.text("Propiedad de CGER, La Palma", textStartX, centerY + 4, {
-      align: "left",
-    });
+    pdf.text("Propiedad de CGER", textStartX, centerY + 2, { align: "left" });
+    pdf.text("La Palma", textStartX, centerY + 7, { align: "left" });
 
     pdf.save(`etiqueta-${asset.codigo}.pdf`);
   };
@@ -63,7 +61,7 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
 
     // Dimensiones de la etiqueta en mm
     const labelWidthMm = 24;
-    const labelHeightMm = Number(dymoHeightMm || 12);
+    const labelHeightMm = DYMO_HEIGHT_MM;
 
     // Crear PDF con tamaño exacto de la etiqueta
     const pdf = new jsPDF({
@@ -112,19 +110,16 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       switch (barcodeFormat) {
         case "CODE128":
           Object.assign(barcodeConfig, {
-            // Quiet zone: 1.2mm normal, 2.0mm en modo móvil
-            margin: Math.round((mobile12mmMode ? 2.0 : 1.2) * pxPerMm),
-            // Altura usable ~78–82%
-            height: Math.round(targetPxHeight * (mobile12mmMode ? 0.78 : 0.8)),
-            // x-dimension: 0.33mm en móvil, 0.25mm normal
-            width: Math.max(3, Math.round((mobile12mmMode ? 0.33 : 0.25) * pxPerMm))
+            margin: Math.round(1.2 * pxPerMm),
+            height: Math.round(targetPxHeight * 0.8),
+            width: Math.max(3, Math.round(0.25 * pxPerMm))
           });
           break;
         case "CODE39":
           Object.assign(barcodeConfig, {
-            margin: Math.round((mobile12mmMode ? 1.8 : 1.0) * pxPerMm),
-            height: Math.round(targetPxHeight * (mobile12mmMode ? 0.76 : 0.8)),
-            width: Math.max(3, Math.round((mobile12mmMode ? 0.34 : 0.28) * pxPerMm))
+            margin: Math.round(1.0 * pxPerMm),
+            height: Math.round(targetPxHeight * 0.8),
+            width: Math.max(3, Math.round(0.28 * pxPerMm))
           });
           break;
         case "EAN13":
@@ -249,25 +244,12 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
           Imprimir
         </button>
         {/* Selector de tamaño para DYMO */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-600">Alto etiqueta:</span>
-          <select
-            value={dymoHeightMm}
-            onChange={(e) => setDymoHeightMm(Number(e.target.value))}
-            className="text-xs border rounded px-1 py-0.5"
-          >
-            <option value={7}>7 mm</option>
-            <option value={12}>12 mm</option>
-            <option value={18}>18 mm</option>
-            <option value={20}>20 mm (2 cm)</option>
-          </select>
-        </div>
         <button
           onClick={() => setShowPrintOptions(!showPrintOptions)}
           className="text-sm text-purple-600 hover:underline flex items-center gap-1 whitespace-nowrap"
         >
           <FaPrint />
-          DYMO 24x{dymoHeightMm} mm
+          DYMO 24x20 mm
         </button>
         
         {/* Opciones avanzadas de impresión */}
@@ -289,34 +271,6 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
                   <option value="EAN8">EAN8</option>
                   <option value="DATAMATRIX">Data Matrix (12mm)</option>
                 </select>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Altura de etiqueta:
-                </label>
-                <select
-                  value={dymoHeightMm}
-                  onChange={(e) => setDymoHeightMm(Number(e.target.value))}
-                  className="w-full text-xs border rounded px-2 py-1"
-                >
-                  <option value={7}>7 mm (Muy pequeña)</option>
-                  <option value={12}>12 mm (Estándar)</option>
-                  <option value={18}>18 mm (Grande)</option>
-                  <option value={20}>20 mm (Requisito 2 cm)</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  id="mobile12"
-                  type="checkbox"
-                  checked={mobile12mmMode}
-                  onChange={(e) => setMobile12mmMode(e.target.checked)}
-                />
-                <label htmlFor="mobile12" className="text-xs text-gray-700">
-                  Modo móvil 12 mm (barras más anchas y mayor margen)
-                </label>
               </div>
               
               <div className="flex gap-2">
