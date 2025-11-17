@@ -192,6 +192,21 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     encodeURIComponent(
       `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="12" fill="#9ca3af">Sin imagen</text></svg>`
     );
+  const handlePrintQrOnly = async (e) => {
+    e.stopPropagation();
+    const qrValue = `${window.location.origin}/activos/${asset.id}`;
+    const qrDataUrl = await toDataURL(qrValue, { width: 200, margin: 1 });
+
+    const labelSize = 20; // 20 mm x 20 mm
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: [labelSize, labelSize],
+    });
+
+    pdf.addImage(qrDataUrl, "PNG", 0, 0, labelSize, labelSize);
+    pdf.save(`qr-${asset.codigo || asset.id}.pdf`);
+  };
 
   return (
     <div
@@ -242,6 +257,13 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
         >
           <FaPrint />
           Imprimir
+        </button>
+        <button
+          onClick={handlePrintQrOnly}
+          className="text-sm text-emerald-600 hover:underline flex items-center gap-1 whitespace-nowrap"
+        >
+          <FaPrint />
+          Solo QR
         </button>
         {/* Selector de tamaño para DYMO */}
         <button
