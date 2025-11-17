@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import ModalEditar from "./ModalEditar";
 import { getSignedUrlIfNeeded } from "../utils/storage";
+import { supabase } from "../supabaseClient";
 
 Modal.setAppElement("#root");
 
@@ -9,6 +10,7 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [imageResolvedUrl, setImageResolvedUrl] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const resolve = async () => {
@@ -33,6 +35,57 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
   });
 
   if (!asset) return null;
+
+  const handleDelete = async () => {
+    if (!asset?.id || isDeleting) return;
+    const confirmed = window.confirm(
+      `¿Seguro que deseas eliminar el activo "${asset.name || ""}"? Esta acción no se puede deshacer.`
+    );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+
+    try {
+      const isEpi = asset.category?.toLowerCase() === "epi";
+
+      if (isEpi) {
+        const { error: sizesError } = await supabase
+          .from("epi_sizes")
+          .delete()
+          .eq("epi_id", asset.id);
+
+        if (sizesError) {
+          throw sizesError;
+        }
+
+        const { error: epiError } = await supabase
+          .from("epi_assets")
+          .delete()
+          .eq("id", asset.id);
+
+        if (epiError) {
+          throw epiError;
+        }
+      } else {
+        const { error } = await supabase
+          .from("assets")
+          .delete()
+          .eq("id", asset.id);
+
+        if (error) {
+          throw error;
+        }
+      }
+
+      onUpdated();
+      onClose();
+    } catch (err) {
+      console.error("Error al eliminar el activo:", err);
+      window.alert("No se pudo eliminar el activo. Revisa la consola para más detalles.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const DetailItem = ({ label, value }) => (
     <div className="flex flex-col border rounded p-3 bg-gray-50">
@@ -137,12 +190,19 @@ const DrawerDetalle = ({ asset, onClose, onUpdated }) => {
             )}
           </div>
 
-          <div className="mt-6 text-right">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700"
               onClick={() => setIsEditOpen(true)}
             >
               ✏️ Editar activo
+            </button>
+            <button
+              className={`px-4 py-2 rounded shadow text-white ${isDeleting ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"}`}
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Eliminando..." : "🗑️ Eliminar"}
             </button>
           </div>
         </div>
