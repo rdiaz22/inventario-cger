@@ -12,7 +12,7 @@ import { getSignedUrlIfNeeded, getThumbnailPublicUrl } from "../utils/storage";
 const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   // const navigate = useNavigate(); // Eliminar esta línea
   const [showQR, setShowQR] = useState(false);
-  const [dymoHeightMm, setDymoHeightMm] = useState(12); // altura configurable: 7, 12, 18
+  const [dymoHeightMm, setDymoHeightMm] = useState(20); // altura configurable: 7, 12, 18, 20
   const [barcodeFormat, setBarcodeFormat] = useState("CODE128"); // formato de código de barras
   const [showPrintOptions, setShowPrintOptions] = useState(false);
   const [mobile12mmMode, setMobile12mmMode] = useState(false);
@@ -25,24 +25,34 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     // Generar QR más grande para mejor definición
     const qrDataUrl = await toDataURL(qrValue, { width: 200, margin: 1 });
 
+    const labelWidth = 60;
+    const labelHeight = 20; // 20 mm = 2 cm de alto
+
     const pdf = new jsPDF({
-      orientation: "landscape", // horizontal
+      orientation: "landscape",
       unit: "mm",
-      format: [60, 40],
+      format: [labelWidth, labelHeight],
     });
 
-    // Centrar el QR (20mm de ancho, centrado en 60mm)
-    pdf.addImage(qrDataUrl, "PNG", 20, 5, 20, 20);
+    // QR a la izquierda ocupando 18mm y centrado verticalmente
+    const qrSize = 18;
+    const qrX = 2;
+    const qrY = (labelHeight - qrSize) / 2;
+    pdf.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
 
-    // Centrar el código (ancho total 60mm)
-    pdf.setFontSize(14);
-    pdf.setFont(undefined, 'bold');
-    pdf.text(asset.codigo || '', 30, 30, { align: 'center' });
+    // Texto a la derecha del QR
+    const textStartX = qrX + qrSize + 4;
+    const centerY = labelHeight / 2;
 
-    // Centrar el texto de propiedad
-    pdf.setFontSize(10);
-    pdf.setFont(undefined, 'normal');
-    pdf.text("Propiedad de CGER, La Palma", 30, 35, { align: 'center' });
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, "bold");
+    pdf.text(asset.codigo || "", textStartX, centerY - 1, { align: "left" });
+
+    pdf.setFontSize(9);
+    pdf.setFont(undefined, "normal");
+    pdf.text("Propiedad de CGER, La Palma", textStartX, centerY + 4, {
+      align: "left",
+    });
 
     pdf.save(`etiqueta-${asset.codigo}.pdf`);
   };
@@ -249,6 +259,7 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
             <option value={7}>7 mm</option>
             <option value={12}>12 mm</option>
             <option value={18}>18 mm</option>
+            <option value={20}>20 mm (2 cm)</option>
           </select>
         </div>
         <button
@@ -292,6 +303,7 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
                   <option value={7}>7 mm (Muy pequeña)</option>
                   <option value={12}>12 mm (Estándar)</option>
                   <option value={18}>18 mm (Grande)</option>
+                  <option value={20}>20 mm (Requisito 2 cm)</option>
                 </select>
               </div>
 
