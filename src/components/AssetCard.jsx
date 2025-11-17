@@ -197,14 +197,19 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     const qrValue = `${window.location.origin}/activos/${asset.id}`;
     const qrDataUrl = await toDataURL(qrValue, { width: 200, margin: 1 });
 
-    const labelSize = 20; // 20 mm x 20 mm
+    const labelWidth = 20; // mm
+    const labelHeight = 24; // mm (alto del cartucho)
+    const qrSize = 20; // mm
+    const qrX = 0; // pegado al borde lateral
+    const qrY = (labelHeight - qrSize) / 2; // centrado verticalmente
+
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: [labelSize, labelSize],
+      format: [labelWidth, labelHeight],
     });
 
-    pdf.addImage(qrDataUrl, "PNG", 0, 0, labelSize, labelSize);
+    pdf.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
     pdf.save(`qr-${asset.codigo || asset.id}.pdf`);
   };
 
