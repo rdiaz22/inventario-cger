@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient";
 import DrawerDetalle from "./DrawerDetalle";
 import ModalForm from "./ModalForm";
 import AssetCard from "./AssetCard";
+import ImportAssets from "./ImportAssets";
 
 const AssetList = () => {
   const [assets, setAssets] = useState([]);
@@ -13,6 +14,7 @@ const AssetList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   useEffect(() => {
     fetchAssets();
@@ -152,12 +154,20 @@ const AssetList = () => {
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">📋 Inventario de Activos</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded shadow"
-        >
-          ➕ Añadir Activo
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            📥 Importar CSV
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition-colors"
+          >
+            ➕ Añadir Activo
+          </button>
+        </div>
       </div>
 
       {/* Tarjetas de resumen */}
@@ -287,6 +297,15 @@ const AssetList = () => {
         onClose={() => setIsModalOpen(false)}
         onCreated={() => {
           setIsModalOpen(false);
+          fetchAssets();
+        }}
+      />
+
+      <ImportAssets
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImported={() => {
+          setIsImportModalOpen(false);
           fetchAssets();
         }}
       />
