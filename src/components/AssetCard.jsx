@@ -13,6 +13,8 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
   // const navigate = useNavigate(); // Eliminar esta línea
   const [showQR, setShowQR] = useState(false);
   const DYMO_HEIGHT_MM = 20; // Altura fija de 20 mm para etiquetas DYMO
+  const DYMO_TAPE_HEIGHT_MM = 24; // Alto físico del cartucho 24 mm
+  const QR_PRINT_SIZE_MM = 22; // Tamaño objetivo del QR para iOS/Android
   const [barcodeFormat, setBarcodeFormat] = useState("CODE128"); // formato de código de barras
   const [showPrintOptions, setShowPrintOptions] = useState(false);
 
@@ -25,7 +27,7 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     const qrDataUrl = await toDataURL(qrValue, { width: 200, margin: 1 });
 
     const labelWidth = 60;
-    const labelHeight = 20; // 20 mm = 2 cm de alto
+    const labelHeight = DYMO_TAPE_HEIGHT_MM; // Aprovecha la altura total de la cinta
 
     const pdf = new jsPDF({
       orientation: "landscape",
@@ -33,8 +35,8 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
       format: [labelWidth, labelHeight],
     });
 
-    // QR a la izquierda ocupando 18mm y centrado verticalmente
-    const qrSize = 18;
+    // QR a la izquierda ocupando 22mm y centrado verticalmente
+    const qrSize = QR_PRINT_SIZE_MM;
     const qrX = 2;
     const qrY = (labelHeight - qrSize) / 2;
     pdf.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
@@ -197,10 +199,10 @@ const AssetCard = ({ asset, onClick }) => { // Agregar onClick como prop
     const qrValue = `${window.location.origin}/activos/${asset.id}`;
     const qrDataUrl = await toDataURL(qrValue, { width: 200, margin: 1 });
 
-    const labelWidth = 20; // mm
-    const labelHeight = 24; // mm (alto del cartucho)
-    const qrSize = 20; // mm
-    const qrX = 0; // pegado al borde lateral
+    const labelWidth = QR_PRINT_SIZE_MM + 2; // mm (deja 1mm de margen lateral)
+    const labelHeight = DYMO_TAPE_HEIGHT_MM; // mm (alto del cartucho)
+    const qrSize = QR_PRINT_SIZE_MM; // mm
+    const qrX = 1; // margen lateral fijo de 1mm
     const qrY = (labelHeight - qrSize) / 2; // centrado verticalmente
 
     const pdf = new jsPDF({
