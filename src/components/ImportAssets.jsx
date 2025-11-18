@@ -334,11 +334,93 @@ const ImportAssets = ({ isOpen, onClose, onImported }) => {
 
   // Descargar plantilla CSV
   const downloadTemplate = () => {
-    const headers = Object.keys(availableFields);
-    const labels = headers.map(h => availableFields[h].label);
-    const csvContent = labels.join(',') + '\n' + 
-      'Ejemplo Activo 1,ACT-001,Apple,iPhone 13,Smartphone,SN123456,Usuario 1,Electrónica,Activo,1,2024-01-15,2025-01-15,899.99\n' +
-      'Ejemplo EPI,EPI-001,3M,Mascarilla FFP2,EPI de protección,SN789,Usuario 2,EPI,Activo,10,2024-01-10,2025-01-10,5.50,Proveedor XYZ,Fabricante ABC,CE,90';
+    // Headers en orden lógico
+    const headerOrder = [
+      'name', 'codigo', 'brand', 'model', 'details', 
+      'serial_number', 'assigned_to', 'category', 'status', 'quantity',
+      'fecha_compra', 'fecha_garantia', 'precio_compra',
+      'supplier', 'fabricante', 'certificacion', 'maintenance_frequency'
+    ];
+    
+    // Crear headers con labels claros
+    const headers = headerOrder.map(field => availableFields[field].label);
+    
+    // Ejemplos de datos bien estructurados
+    const examples = [
+      // Ejemplo 1: Activo electrónico normal
+      [
+        'Portátil Dell',                    // Nombre
+        'ACT-001',                          // Código
+        'Dell',                             // Marca
+        'Latitude 5520',                    // Modelo
+        'Ordenador portátil para oficina',  // Descripción
+        'SN123456789',                      // Número de Serie
+        'Juan Pérez',                       // Asignado a
+        'Electrónica',                      // Categoría
+        'Activo',                           // Estado
+        '1',                                // Cantidad
+        '2024-01-15',                       // Fecha de Compra
+        '2025-01-15',                       // Fecha de Garantía
+        '899.99',                           // Precio de Compra
+        '',                                 // Proveedor (EPI) - vacío
+        '',                                 // Fabricante (EPI) - vacío
+        '',                                 // Certificación (EPI) - vacío
+        ''                                  // Frecuencia Mantenimiento - vacío
+      ],
+      // Ejemplo 2: EPI
+      [
+        'Mascarilla FFP2',                  // Nombre
+        'EPI-001',                          // Código
+        '3M',                               // Marca
+        'FFP2 N95',                         // Modelo
+        'Mascarilla de protección respiratoria', // Descripción
+        'SN789012',                         // Número de Serie
+        'María García',                     // Asignado a
+        'EPI',                              // Categoría
+        'Activo',                           // Estado
+        '10',                               // Cantidad
+        '2024-01-10',                       // Fecha de Compra
+        '2025-01-10',                       // Fecha de Garantía
+        '5.50',                             // Precio de Compra
+        'Proveedor XYZ',                    // Proveedor (EPI)
+        'Fabricante ABC',                   // Fabricante (EPI)
+        'CE',                               // Certificación (EPI)
+        '90'                                // Frecuencia Mantenimiento (días)
+      ],
+      // Ejemplo 3: Mobiliario con cantidad
+      [
+        'Silla de Oficina',                 // Nombre
+        'ACT-002',                          // Código
+        'Herman Miller',                     // Marca
+        'Aeron',                            // Modelo
+        'Silla ergonómica para oficina',    // Descripción
+        '',                                 // Número de Serie - vacío
+        '',                                 // Asignado a - vacío
+        'Mobiliario',                       // Categoría
+        'Activo',                           // Estado
+        '4',                                // Cantidad
+        '2024-02-01',                       // Fecha de Compra
+        '',                                 // Fecha de Garantía - vacío
+        '450.00',                           // Precio de Compra
+        '',                                 // Proveedor (EPI) - vacío
+        '',                                 // Fabricante (EPI) - vacío
+        '',                                 // Certificación (EPI) - vacío
+        ''                                  // Frecuencia Mantenimiento - vacío
+      ]
+    ];
+    
+    // Construir contenido CSV
+    let csvContent = headers.join(',') + '\n';
+    examples.forEach(example => {
+      csvContent += example.join(',') + '\n';
+    });
+    
+    // Agregar línea en blanco y nota informativa
+    csvContent += '\n';
+    csvContent += '"NOTA: El campo Nombre es obligatorio. Los demás campos son opcionales."\n';
+    csvContent += '"Para EPIs, completa los campos de Proveedor, Fabricante y Certificación."\n';
+    csvContent += '"Las fechas deben estar en formato YYYY-MM-DD (ejemplo: 2024-01-15)"\n';
+    csvContent += '"Elimina estas líneas de nota antes de importar."\n';
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
