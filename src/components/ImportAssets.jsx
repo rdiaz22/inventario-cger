@@ -64,11 +64,14 @@ const ImportAssets = ({ isOpen, onClose, onImported }) => {
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length === 0) return { headers: [], data: [] };
 
-    // Detectar delimitador (coma o punto y coma)
-    const delimiter = text.includes(';') ? ';' : ',';
+    // Detectar delimitador (punto y coma es más común en Excel español, luego coma)
+    // También detectar si hay BOM UTF-8 y eliminarlo
+    const textWithoutBOM = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+    const delimiter = textWithoutBOM.includes(';') ? ';' : ',';
     
-    // Parsear headers
-    const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
+    // Parsear headers (usar textWithoutBOM para la primera línea también)
+    const firstLine = lines[0].charCodeAt(0) === 0xFEFF ? lines[0].slice(1) : lines[0];
+    const headers = firstLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
     
     // Parsear datos
     const data = [];
@@ -409,10 +412,23 @@ const ImportAssets = ({ isOpen, onClose, onImported }) => {
       ]
     ];
     
-    // Construir contenido CSV
-    let csvContent = headers.join(',') + '\n';
+    // Construir contenido CSV usando punto y coma como delimitador (más compatible con Excel)
+    const delimiter = ';';
+    
+    // Construir contenido CSV con delimitador punto y coma
+    let csvContent = '\uFEFF'; // BOM UTF-8 para que Excel reconozca el encoding correctamente
+    csvContent += headers.join(delimiter) + '\n';
     examples.forEach(example => {
-      csvContent += example.join(',') + '\n';
+      // Escapar valores que contengan punto y coma o comillas
+      const escapedExample = example.map(value => {
+        if (value === '') return '';
+        // Si contiene punto y coma, comillas o saltos de línea, envolver en comillas
+        if (value.includes(delimiter) || value.includes('"') || value.includes('\n')) {
+          return '"' + value.replace(/"/g, '""') + '"';
+        }
+        return value;
+      });
+      csvContent += escapedExample.join(delimiter) + '\n';
     });
     
     // Agregar línea en blanco y nota informativa
@@ -422,6 +438,7 @@ const ImportAssets = ({ isOpen, onClose, onImported }) => {
     csvContent += '"Las fechas deben estar en formato YYYY-MM-DD (ejemplo: 2024-01-15)"\n';
     csvContent += '"Elimina estas líneas de nota antes de importar."\n';
     
+    // Usar encoding UTF-8 con BOM para Excel
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
